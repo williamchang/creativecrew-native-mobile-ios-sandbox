@@ -2,7 +2,7 @@
 
 @implementation PongViewController
 
-@synthesize ivPlayer1Paddle;
+@synthesize ivPlayer1TouchPad;
 
 //---------------------------------------------------------------------
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -15,7 +15,6 @@
 /* Implement loadView if you want to create a view hierarchy programmatically. */
 - (void)loadView {
     [super loadView];
-    tvOutput.text = @"";
 }
 //---------------------------------------------------------------------
 /* If you need to do additional setup after loading the view, override viewDidLoad. */
