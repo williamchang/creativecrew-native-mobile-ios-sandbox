@@ -26,12 +26,12 @@
 //---------------------------------------------------------------------
 - (void) flipToBack {
     ConsoleViewController *vc = [[ConsoleViewController alloc] initWithNibName:@"ConsoleViewController" bundle:nil];
-    [self setVcConsole:vc];
+    self.vcConsole = vc;
     [vc release];
 
     [UIView beginAnimations:nil	context:NULL];
     [UIView setAnimationDuration:1.0];
-    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
+    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self.window cache:YES];
     [vcMain.view removeFromSuperview];
     [self.window addSubview:vcConsole.view];
     [UIView commitAnimations];
@@ -40,10 +40,11 @@
 - (void) flipToFront {
     [UIView beginAnimations:nil	context:NULL];
     [UIView setAnimationDuration:1.0];
-    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
+    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self.window cache:YES];
     [vcConsole.view removeFromSuperview];
     [self.window addSubview:vcMain.view];
     [UIView commitAnimations];
+    
     [vcConsole release];
     vcConsole = nil;
 }

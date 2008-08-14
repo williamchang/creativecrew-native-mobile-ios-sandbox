@@ -4,13 +4,12 @@
 @implementation MainViewController
 
 @synthesize lblCompany;
-@synthesize btnCompany;
 
 //---------------------------------------------------------------------
 - (id) initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     if(self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
         // Title displayed by the navigation controller.
-        self.title = @"Creative Crew";        
+        self.title = @"Creative Crew";
     }
     return self;
 }
@@ -45,14 +44,17 @@
 /* Prepares the receiver for service after it has been loaded from an Interface Builder archive, or nib file. */
 - (void) awakeFromNib {}
 //---------------------------------------------------------------------
-- (IBAction) switchControllers:(id)sender {
+- (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self switchControllers];
+}
+//---------------------------------------------------------------------
+- (void) switchControllers {
 	AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	[dlgt flipToBack];
 }
 //---------------------------------------------------------------------
 - (void) dealloc {
     [lblCompany release];
-    [btnCompany release];
     [super dealloc];
 }
 

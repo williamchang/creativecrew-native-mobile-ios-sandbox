@@ -1,6 +1,6 @@
 /**
 @file
-    MainViewController.h
+    TictactoeView.h
 @brief
     Copyright 2008 Creative Crew. All rights reserved.
 @author
@@ -8,13 +8,14 @@
 @version
     0.1
 @date
-    - Created: 2008-08-07
-    - Modified: 2008-08-13
+    - Created: 2008-08-14
+    - Modified: 2008-08-14
     .
 @note
     References:
     - General:
         - https://developer.apple.com/iphone/library/navigation/index.html
+        - http://developer.apple.com/iphone/library/navigation/Frameworks/Media/OpenGLES/index.html
         .
     .
 */
@@ -22,12 +23,8 @@
 #import <UIKit/UIKit.h>
 
 
-@interface MainViewController : UIViewController {
-    IBOutlet UILabel *lblCompany;
+@interface TictactoeView : UIView {
+
 }
-
-@property (nonatomic, retain) UILabel *lblCompany;
-
-- (IBAction) switchControllers;
 
 @end

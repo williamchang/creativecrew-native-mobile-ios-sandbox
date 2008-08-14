@@ -1,5 +1,7 @@
 #import "ConsoleViewController.h"
 #import "AppDelegate.h"
+#import "PongViewController.h"
+#import "TictactoeViewController.h"
 
 @implementation ConsoleViewController
 
@@ -40,10 +42,11 @@
 - (void) awakeFromNib {}
 //---------------------------------------------------------------------
 - (BOOL) textFieldShouldReturn:(UITextField *)txt {
-    [txt resignFirstResponder];
     if(txt == txtInput) {
-        [txtInput resignFirstResponder];
         [self parseRequest:txtInput.text];
+        txtInput.text = @"";
+    } else {
+        [txt resignFirstResponder];
     }
     return YES;
 }
@@ -63,15 +66,43 @@
         return NO;
     }
     [self outputRequest:txtInput.text];
-    NSInteger i = 0;
     NSArray *aryParameters = [strInput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *command = [aryParameters objectAtIndex:0];
+    /*
+    NSInteger i = 0;
     for(NSString *p in aryParameters) {
         if(i == 0) {
             [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" not found.", p]];
         }
         i++;
     }
-    return YES;
+    */
+    if([@"pong" caseInsensitiveCompare:command] == 0) {
+        [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
+        
+        AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
+        //MainViewController *vc = [[MainViewController alloc] initWithNibName:@"MainViewController" bundle:nil];
+        PongViewController *vc = [[PongViewController alloc] initWithNibName:@"PongViewController" bundle:nil];
+        
+        [UIView beginAnimations:nil	context:NULL];
+        [UIView setAnimationDuration:1.0];
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:dlgt.window cache:YES];
+        [self.view removeFromSuperview];
+        [dlgt.window addSubview:vc.view];
+        [UIView commitAnimations];
+        
+        return YES;
+    } else if([@"tictactoe" caseInsensitiveCompare:command] == 0) {
+        [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
+        
+        //AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
+        //TictactoeViewController *vc = [[TictactoeViewController alloc] initWithNibName:@"TictactoeViewController" bundle:nil];
+        
+        return YES;
+    } else {
+        [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" not found.", command]];
+    }
+    return NO;
 }
 //---------------------------------------------------------------------
 - (BOOL) executeRequest:(NSString *)strCommand {
