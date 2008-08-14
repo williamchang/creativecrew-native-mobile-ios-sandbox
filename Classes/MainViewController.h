@@ -30,6 +30,6 @@
 @property (nonatomic, retain) UILabel *lblCompany;
 @property (nonatomic, retain) UIButton *btnCompany;
 
-- (IBAction)switchControllers:(id)sender;
+- (IBAction) switchControllers:(id)sender;
 
 @end

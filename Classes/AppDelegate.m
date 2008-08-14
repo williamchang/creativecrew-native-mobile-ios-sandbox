@@ -10,7 +10,7 @@
 
 //---------------------------------------------------------------------
 /** Start application (similar to main method) after launching is finish. */
-- (void)applicationDidFinishLaunching:(UIApplication *)application {	
+- (void) applicationDidFinishLaunching:(UIApplication *)application {	
 
     // TODO: Create and configure the navigation and view controllers.
 
@@ -24,7 +24,7 @@
     [self.window makeKeyAndVisible];
 }
 //---------------------------------------------------------------------
-- (void)flipToBack {
+- (void) flipToBack {
     ConsoleViewController *vc = [[ConsoleViewController alloc] initWithNibName:@"ConsoleViewController" bundle:nil];
     [self setVcConsole:vc];
     [vc release];
@@ -37,7 +37,7 @@
     [UIView commitAnimations];
 }
 //---------------------------------------------------------------------
-- (void)flipToFront {
+- (void) flipToFront {
     [UIView beginAnimations:nil	context:NULL];
     [UIView setAnimationDuration:1.0];
     [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:YES];
@@ -48,7 +48,7 @@
     vcConsole = nil;
 }
 //---------------------------------------------------------------------
-- (void)dealloc {
+- (void) dealloc {
     [vcConsole release];
     [vcMain release];
     [window release];

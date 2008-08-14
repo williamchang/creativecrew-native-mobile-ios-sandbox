@@ -32,4 +32,6 @@
 
 @property (nonatomic, retain) UIImageView *ivPlayer1TouchPad;
 
+- (void) renderOneFrame;
+
 @end

@@ -32,11 +32,11 @@
 @property (nonatomic, retain) UIButton *btnInput;
 @property (nonatomic, retain) UITextView *tvOutput;
 
-- (IBAction)onExecute:(id)sender;
-- (IBAction)onSwitchControllers:(id)sender;
-- (BOOL)parseRequest:(NSString *)strInput;
-- (BOOL)executeRequest:(NSString *)strCommand;
-- (BOOL)outputRequest:(NSString *)strInput;
-- (BOOL)outputResponse:(NSString *)strInput;
+- (IBAction) onExecute:(id)sender;
+- (IBAction) onSwitchControllers:(id)sender;
+- (BOOL) parseRequest:(NSString *)strInput;
+- (BOOL) executeRequest:(NSString *)strCommand;
+- (BOOL) outputRequest:(NSString *)strInput;
+- (BOOL) outputResponse:(NSString *)strInput;
 
 @end

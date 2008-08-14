@@ -7,7 +7,7 @@
 @synthesize btnCompany;
 
 //---------------------------------------------------------------------
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+- (id) initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     if(self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
         // Title displayed by the navigation controller.
         self.title = @"Creative Crew";        
@@ -16,7 +16,7 @@
 }
 //---------------------------------------------------------------------
 /* Implement loadView if you want to create a view hierarchy programmatically. */
-- (void)loadView {
+- (void) loadView {
     [super loadView];
     /*
     [btnCompany setTitle:strTitle forState:UIControlStateNormal];
@@ -28,29 +28,29 @@
 }
 //---------------------------------------------------------------------
 /* If you need to do additional setup after loading the view, override viewDidLoad. */
-- (void)viewDidLoad {
+- (void) viewDidLoad {
     [super viewDidLoad];
 }
 //---------------------------------------------------------------------
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     // Return YES for supported orientations
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 //---------------------------------------------------------------------
-- (void)didReceiveMemoryWarning {
+- (void) didReceiveMemoryWarning {
     [super didReceiveMemoryWarning]; // Releases the view if it doesn't have a superview
     // Release anything that's not essential, such as cached data
 }
 //---------------------------------------------------------------------
 /* Prepares the receiver for service after it has been loaded from an Interface Builder archive, or nib file. */
-- (void)awakeFromNib {}
+- (void) awakeFromNib {}
 //---------------------------------------------------------------------
-- (IBAction)switchControllers:(id)sender {
+- (IBAction) switchControllers:(id)sender {
 	AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	[dlgt flipToBack];
 }
 //---------------------------------------------------------------------
-- (void)dealloc {
+- (void) dealloc {
     [lblCompany release];
     [btnCompany release];
     [super dealloc];
