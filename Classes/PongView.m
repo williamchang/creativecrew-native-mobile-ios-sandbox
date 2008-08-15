@@ -189,6 +189,8 @@
 }
 //---------------------------------------------------------------------
 - (void) dealloc {
+    [self _destroySurface];
+    [_context release];_context = nil;
 	[super dealloc];
 }
 

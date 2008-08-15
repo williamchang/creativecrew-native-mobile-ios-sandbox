@@ -50,7 +50,7 @@
 @property (readonly) NSString *pixelFormat;
 @property (readonly) GLuint depthFormat;
 @property (readonly) EAGLContext *context;
-@property BOOL autoresizesSurface; //NO by default - Set to YES to have the EAGL surface automatically resized when the view bounds change, otherwise the EAGL surface contents is rendered scaled
+@property BOOL autoresizesSurface; // NO by default - Set to YES to have the EAGL surface automatically resized when the view bounds change, otherwise the EAGL surface contents is rendered scaled
 @property (readonly, nonatomic) CGSize surfaceSize;
 @property (assign) id<PongViewDelegate> delegate;
 

@@ -32,8 +32,6 @@
 #define kUserNameDefaultKey @"userName" // NSString.
 #define kHighScoresDefaultKey @"highScores" // NSArray of NSStrings.
 
-#define kInitialVelocity 100 // Pixels / 1 second. 
-
 #define kAccelerometerFrequency 100 // Hz.
 #define kFilteringFactor 0.1 // For filtering out gravitational affects.
 
@@ -89,14 +87,20 @@ typedef struct	{
     CFTimeInterval _timeBegin;
     Vector2D _ballPosition;
     Vector2D _ballVelocity;
+    unsigned int _ballDirection;
     
     unsigned int _Player1Score;
+    Texture2D *_Player1StatusScore;
     unsigned int _Player2Score;
+    Texture2D *_Player2StatusScore;
 }
 
 @property (nonatomic, retain) PongView *glView;
 
 - (void) transitionTo:(UIView *)view slideDirection:(int)style;
+- (void) updateBall;
+- (void) updatePlayer1;
+- (void) updatePlayer2;
 - (void) init;
 - (void) start;
 - (void) renderOneFrame;

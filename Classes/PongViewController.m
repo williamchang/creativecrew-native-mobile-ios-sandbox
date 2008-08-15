@@ -53,6 +53,48 @@
     [view becomeFirstResponder];*/
 }
 //---------------------------------------------------------------------
+- (void) updateBall {
+    CGRect bounds = [glView bounds];
+    
+    if(_ballDirection == 0) {
+         _ballPosition.x -= _ballVelocity.x;
+         _ballPosition.y -= _ballVelocity.y;
+    } else if(_ballDirection == 1) {
+        _ballPosition.x += _ballVelocity.x;
+        _ballPosition.y -= _ballVelocity.y;
+    } else if(_ballDirection == 2) {
+        _ballPosition.x += _ballVelocity.x;
+        _ballPosition.y += _ballVelocity.y;
+    } else if(_ballDirection == 3) {
+        _ballPosition.x -= _ballVelocity.x;
+        _ballPosition.y += _ballVelocity.y;
+    }
+    
+    if(_ballDirection == 0 && _ballPosition.x < 0) {
+        _ballDirection = 1;
+    } else if(_ballDirection == 0 && _ballPosition.y < 0) {
+        _ballDirection = 3;
+    } else if(_ballDirection == 1 && _ballPosition.y < 0) {
+        _ballDirection = 2;
+    } else if(_ballDirection == 1 && _ballPosition.x > bounds.size.width) {
+        _ballDirection = 0;
+    } else if(_ballDirection == 2 && _ballPosition.y > bounds.size.height) {
+        _ballDirection = 1;
+    } else if(_ballDirection == 2 && _ballPosition.x > bounds.size.width) {
+        _ballDirection = 3;
+    } else if(_ballDirection == 3 && _ballPosition.y > bounds.size.height) {
+        _ballDirection = 0;
+    } else if(_ballDirection == 3 && _ballPosition.x < 0) {
+        _ballDirection = 2;
+    }
+}
+//---------------------------------------------------------------------
+- (void) updatePlayer1 {
+}
+//---------------------------------------------------------------------
+- (void) updatePlayer2 {
+}
+//---------------------------------------------------------------------
 - (void) init {
     // Declarations. 
     // For Sound: NSBundle *bundle = [NSBundle mainBundle];
@@ -127,11 +169,20 @@
     _state = kState_Running;
     _timeBegin = CFAbsoluteTimeGetCurrent();
     
+    // Destroy dynamic textures.
+    [_Player1StatusScore release];
+    _Player1StatusScore = nil;
+    [_Player2StatusScore release];
+    _Player2StatusScore = nil;
+    
     // Init.
+    _Player1Score = 0;
+    _Player2Score = 0;
     _ballPosition.x = bounds.size.width / 2;
     _ballPosition.y = bounds.size.height / 2;
-    _ballVelocity.x = 0.0;
-    _ballVelocity.y = -kInitialVelocity;
+    _ballVelocity.x = 2.0; // Pixels / 1 second.
+    _ballVelocity.y = 2.0; // Pixels / 1 second.
+    _ballDirection = 1;
     
     // Render a frame immediately.
     [self renderOneFrame];
@@ -152,9 +203,12 @@
         timeCurrent = CFAbsoluteTimeGetCurrent();
         timeDifference = timeCurrent - _timeBegin;
         
-        // Update lander position.
-		_ballPosition.x += _ballVelocity.x * timeDifference;
-		_ballPosition.y += _ballVelocity.y * timeDifference;
+        // Update ball logic.
+		[self updateBall];
+        // Update player 1 logic.
+		[self updatePlayer1];
+        // Update player 2 logic.
+		[self updatePlayer2];
     } else if(_state == kState_Failure) {
         // Stop rendering timer (loop).
         [_timer invalidate];
@@ -167,11 +221,25 @@
     glEnable(GL_BLEND);
     
     if(_state != kState_StandBy) {
-        // Draw player 1.
+        // Draw player 1 paddle.
         
-        // Draw player 2.
+        // Draw overlay player 1 status.
+        _Player1StatusScore = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%i", _Player1Score] dimensions:CGSizeMake(32, 32) alignment:UITextAlignmentCenter fontName:kFontName fontSize:kLabelFontSize];
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        [_textures[kTexture_Player1LabelScore] drawAtPoint:CGPointMake(64, 32)]; // Coordinates (0, 0) start at bottom left of screen.
+        [_Player1StatusScore drawAtPoint:CGPointMake(96 + 4, 32)];
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         
-        // Draw the ball.
+        // Draw player 2 paddle.
+        
+        // Draw overlay player 2 status.
+        _Player2StatusScore = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%i", _Player2Score] dimensions:CGSizeMake(32, 32) alignment:UITextAlignmentCenter fontName:kFontName fontSize:kLabelFontSize];
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        [_textures[kTexture_Player2LabelScore] drawAtPoint:CGPointMake(bounds.size.width - 96, bounds.size.height - 32)]; // Coordinates (0, 0) start at bottom left of screen.
+         [_Player2StatusScore drawAtPoint:CGPointMake(bounds.size.width - 64 + 4, bounds.size.height - 32)];
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        
+        // Draw ball.
         glPushMatrix();
         glTranslatef(_ballPosition.x, _ballPosition.y, 0);
         [_textures[kTexture_Ball] drawAtPoint:CGPointZero];
@@ -183,6 +251,8 @@
 }
 //---------------------------------------------------------------------
 - (void) dealloc {
+    [_Player1StatusScore release];
+    [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
     [glView dealloc];
 	[super dealloc];
