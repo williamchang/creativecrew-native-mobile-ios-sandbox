@@ -106,7 +106,9 @@ typedef struct	{
 - (void) updateBall;
 - (void) updatePlayer1;
 - (void) updatePlayer2;
-- (void) init;
+- (void) initRender;
+- (void) initPhysics;
+- (void) updatePhysics;
 - (void) start;
 - (void) renderOneFrame;
 - (void) reset;

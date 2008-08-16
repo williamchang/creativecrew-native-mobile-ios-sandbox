@@ -1,6 +1,17 @@
 #import "PongViewController.h"
 #import "PongView.h"
 
+// BEGIN: C++ binding layer.
+#include "Box2D.h"
+@interface PongViewController ()
+    b2World *world;
+    GLfloat worldTimeStep;
+    GLint worldIterationCount;
+
+    b2Body *bodyBox;
+@end
+// END: C++ binding layer.
+
 @implementation PongViewController
 
 @synthesize glView;
@@ -35,7 +46,8 @@
     ivPlayer1Touchpad.hidden = YES;
     [self.glView addSubview:ivPlayer1Touchpad];
     
-    [self init];
+    [self initRender];
+    [self initPhysics];
 }
 //---------------------------------------------------------------------
 /* If you need to do additional setup after loading the view, override viewDidLoad. */
@@ -130,7 +142,7 @@
 - (void) updatePlayer2 {
 }
 //---------------------------------------------------------------------
-- (void) init {
+- (void) initRender {
     // Declarations. 
     // For Sound: NSBundle *bundle = [NSBundle mainBundle];
     CGRect rect = [[UIScreen mainScreen] bounds];
@@ -170,6 +182,83 @@
 
     // Swap the framebuffer.
     [glView swapBuffers];
+}
+//---------------------------------------------------------------------
+// C++ binding layer.
+- (void) initPhysics {
+    // Get objective c values.
+    GLfloat canvasWidth = self.view.bounds.size.width;
+    GLfloat canvasHeight = self.view.bounds.size.height;
+    
+    // Define the size of the world.
+    b2AABB worldAABB;
+    worldAABB.upperBound.Set(500.0, 500.0);
+    worldAABB.lowerBound.Set(-100.0, -100.0);
+    
+    // Define the gravity vector.
+    b2Vec2 gravity(0.0, -10.0);
+    
+    // Let rigid bodies sleep.
+    bool isBodiesSleep = true;
+    
+    // Construct a world object.
+    world = new b2World(worldAABB, gravity, isBodiesSleep);
+    
+    // Define the ground body.
+    b2BodyDef groundDefine;
+    groundDefine.position.Set(76.0, 0.0);
+    
+    // Call the body factory which allocates memory for the ground body
+	// from a pool and creates the ground box shape (also from a pool).
+	// The body is also added to the world.
+    b2Body *groundBody = world->CreateBody(&groundDefine);
+    
+    // Define the ground box shape.
+    b2PolygonDef groundShapeDefine;
+    
+    // The extents are the half-widths of the box.
+    groundShapeDefine.SetAsBox(canvasWidth, 76.0);
+
+    // Add the ground shape to the ground body.
+    groundBody->CreateShape(&groundShapeDefine);
+
+    // Define the dynamic body. We set its position and call the body factory.
+    b2BodyDef bodyBoxDefine;
+    bodyBoxDefine.position.Set((canvasWidth / 2) + 50, canvasHeight / 2);
+    bodyBox = world->CreateBody(&bodyBoxDefine);
+
+    // Define another box shape for our dynamic body.
+    b2PolygonDef bodyShapeDefine;
+    bodyShapeDefine.SetAsBox(1.0, 1.0);
+
+    // Set the box density to be non-zero, so it will be dynamic.
+    bodyShapeDefine.density = 1.0;
+
+    // Override the default friction.
+    bodyShapeDefine.friction = 0.3;
+
+    // Add the shape to the body.
+    bodyBox->CreateShape(&bodyShapeDefine);
+
+    // Now tell the dynamic body to compute it's mass properties base on its shape.
+    bodyBox->SetMassFromShapes();
+
+    // Prepare for simulation. Typically we use a time step of 1/60 of a
+    // second (60Hz) and 10 iterations. This provides a high quality simulation
+    // in most game scenarios.
+    worldTimeStep = 1.0 / kRenderingFPS;
+    worldIterationCount = 10;
+}
+//---------------------------------------------------------------------
+// C++ binding layer.
+- (void) updatePhysics {
+    // Instruct the world to perform a single step of physics simulation.
+    world->Step(worldTimeStep, worldIterationCount);
+    
+    // Get the position and angle of the body.
+    _ballPosition.x = bodyBox->GetPosition().x;
+    _ballPosition.y = bodyBox->GetPosition().y;
+    _ballRotation = bodyBox->GetAngle();
 }
 //---------------------------------------------------------------------
 - (void) start {
@@ -240,11 +329,13 @@
     float timeDifference;
     
 	if(_state == kState_Running) {
+        // Get time difference time.
         timeCurrent = CFAbsoluteTimeGetCurrent();
         timeDifference = timeCurrent - _timeBegin;
-        
+        // Update physics.
+        [self updatePhysics];
         // Update ball logic.
-		[self updateBall];
+		//[self updateBall];
         //_ballRotation += _ballRotationVelocity * timeDifference;
         // Update player 1 logic.
 		[self updatePlayer1];
@@ -300,6 +391,7 @@
     [_Player1StatusScore release];
     [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
+    delete world; // C++
     [ivPlayer1Touchpad release];
     [glView release];
 	[super dealloc];
