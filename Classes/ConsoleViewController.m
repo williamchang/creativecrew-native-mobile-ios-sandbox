@@ -1,3 +1,4 @@
+#import <QuartzCore/QuartzCore.h>
 #import "ConsoleViewController.h"
 #import "AppDelegate.h"
 #import "PongViewController.h"
@@ -77,23 +78,40 @@
         i++;
     }
     */
-    if([@"pong" caseInsensitiveCompare:command] == 0) {
+    if([@"helloworld" caseInsensitiveCompare:command] == 0) {
         [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
+        [self outputResponse:[@"" stringByAppendingFormat:@"System respond: Hello user.", command]];
+        
+        return YES;
+    } else if([@"pong" caseInsensitiveCompare:command] == 0) {
+        [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
+        [txtInput resignFirstResponder];
         
         AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
-        //MainViewController *vc = [[MainViewController alloc] initWithNibName:@"MainViewController" bundle:nil];
         PongViewController *vc = [[PongViewController alloc] initWithNibName:@"PongViewController" bundle:nil];
         
         [UIView beginAnimations:nil	context:NULL];
         [UIView setAnimationDuration:1.0];
-        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:dlgt.window cache:YES];
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromRight forView:dlgt.window cache:YES];
         [self.view removeFromSuperview];
         [dlgt.window addSubview:vc.view];
         [UIView commitAnimations];
         
+        /*
+        [self.view removeFromSuperview];
+        [dlgt.window addSubview:vc.view];
+        CATransition *animation = [CATransition animation];
+        [animation setType:kCATransitionMoveIn];
+        [animation setSubtype:kCATransitionFromRight];
+        [animation setDuration:0.75];
+        [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+        [[vc.view layer] addAnimation:animation forKey:kShowAnimationkey];
+        */
+        
         return YES;
     } else if([@"tictactoe" caseInsensitiveCompare:command] == 0) {
         [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
+        [txtInput resignFirstResponder];
         
         //AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
         //TictactoeViewController *vc = [[TictactoeViewController alloc] initWithNibName:@"TictactoeViewController" bundle:nil];

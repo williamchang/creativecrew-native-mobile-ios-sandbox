@@ -21,6 +21,9 @@
 
 #import <UIKit/UIKit.h>
 
+#define kAnimationKey @"transitionViewAnimation"
+#define kShowAnimationkey @"showAnimation"
+#define kHideAnimationKey @"hideAnimation"
 
 @interface ConsoleViewController : UIViewController {
     IBOutlet UITextField *txtInput;

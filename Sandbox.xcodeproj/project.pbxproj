@@ -17,6 +17,7 @@
 		730B261F0E54DE6900FD059A /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 730B261E0E54DE6900FD059A /* icon.png */; };
 		730B26280E54DE9600FD059A /* background.png in Resources */ = {isa = PBXBuildFile; fileRef = 730B26270E54DE9600FD059A /* background.png */; };
 		732205900E52BE1B006E5599 /* PongViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7322058F0E52BE1B006E5599 /* PongViewController.m */; };
+		733E1D300E5573DE00D92463 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 733E1D2F0E5573DE00D92463 /* EAGLView.m */; };
 		735DE91C0E4BC3F8009B2A88 /* ConsoleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 735DE9190E4BC3F8009B2A88 /* ConsoleViewController.m */; };
 		735DE91D0E4BC3F8009B2A88 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 735DE91B0E4BC3F8009B2A88 /* MainViewController.m */; };
 		735DE9210E4BC415009B2A88 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 735DE91E0E4BC415009B2A88 /* MainWindow.xib */; };
@@ -50,6 +51,8 @@
 		730B26270E54DE9600FD059A /* background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = background.png; path = Resources/background.png; sourceTree = "<group>"; };
 		7322058E0E52BE1B006E5599 /* PongViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PongViewController.h; path = Classes/PongViewController.h; sourceTree = "<group>"; };
 		7322058F0E52BE1B006E5599 /* PongViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PongViewController.m; path = Classes/PongViewController.m; sourceTree = "<group>"; };
+		733E1D2E0E5573DE00D92463 /* EAGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EAGLView.h; path = Classes/EAGLView.h; sourceTree = "<group>"; };
+		733E1D2F0E5573DE00D92463 /* EAGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EAGLView.m; path = Classes/EAGLView.m; sourceTree = "<group>"; };
 		735DE9180E4BC3F8009B2A88 /* ConsoleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConsoleViewController.h; path = Classes/ConsoleViewController.h; sourceTree = "<group>"; };
 		735DE9190E4BC3F8009B2A88 /* ConsoleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConsoleViewController.m; path = Classes/ConsoleViewController.m; sourceTree = "<group>"; };
 		735DE91A0E4BC3F8009B2A88 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MainViewController.h; path = Classes/MainViewController.h; sourceTree = "<group>"; };
@@ -59,8 +62,8 @@
 		735DE9200E4BC415009B2A88 /* ConsoleViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ConsoleViewController.xib; path = Resources/ConsoleViewController.xib; sourceTree = "<group>"; };
 		737867260E54334F00B26209 /* PongView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PongView.h; path = Classes/PongView.h; sourceTree = "<group>"; };
 		737867270E54334F00B26209 /* PongView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PongView.m; path = Classes/PongView.m; sourceTree = "<group>"; };
-		737867290E54342100B26209 /* Texture2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Texture2D.h; sourceTree = "<group>"; };
-		7378672A0E54342100B26209 /* Texture2D.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Texture2D.m; sourceTree = "<group>"; };
+		737867290E54342100B26209 /* Texture2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Texture2D.h; path = Classes/Texture2D.h; sourceTree = "<group>"; };
+		7378672A0E54342100B26209 /* Texture2D.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Texture2D.m; path = Classes/Texture2D.m; sourceTree = "<group>"; };
 		737867DD0E54568E00B26209 /* ball.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ball.png; path = Resources/ball.png; sourceTree = "<group>"; };
 		737867DE0E54568E00B26209 /* paddle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paddle.png; path = Resources/paddle.png; sourceTree = "<group>"; };
 		737867E10E5456C500B26209 /* touchpad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = touchpad.png; path = Resources/touchpad.png; sourceTree = "<group>"; };
@@ -90,8 +93,6 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				737867290E54342100B26209 /* Texture2D.h */,
-				7378672A0E54342100B26209 /* Texture2D.m */,
 				1D3623240D0F684500981E51 /* AppDelegate.h */,
 				1D3623250D0F684500981E51 /* AppDelegate.m */,
 			);
@@ -112,6 +113,7 @@
 				73783AA90E4EC8A400FC7E0F /* Model Classes */,
 				730489790E4ADEB3003A6580 /* Controller Classes */,
 				7378671F0E54317E00B26209 /* View Classes */,
+				733E1D2D0E55737200D92463 /* Vendor Classes */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -170,6 +172,17 @@
 				730B23940E54C75C00FD059A /* TictactoeViewController.m */,
 			);
 			name = "Controller Classes";
+			sourceTree = "<group>";
+		};
+		733E1D2D0E55737200D92463 /* Vendor Classes */ = {
+			isa = PBXGroup;
+			children = (
+				737867290E54342100B26209 /* Texture2D.h */,
+				7378672A0E54342100B26209 /* Texture2D.m */,
+				733E1D2E0E5573DE00D92463 /* EAGLView.h */,
+				733E1D2F0E5573DE00D92463 /* EAGLView.m */,
+			);
+			name = "Vendor Classes";
 			sourceTree = "<group>";
 		};
 		73783AA90E4EC8A400FC7E0F /* Model Classes */ = {
@@ -280,6 +293,7 @@
 				7378672B0E54342100B26209 /* Texture2D.m in Sources */,
 				730B23950E54C75C00FD059A /* TictactoeViewController.m in Sources */,
 				730B24BF0E54CDC400FD059A /* TictactoeView.m in Sources */,
+				733E1D300E5573DE00D92463 /* EAGLView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

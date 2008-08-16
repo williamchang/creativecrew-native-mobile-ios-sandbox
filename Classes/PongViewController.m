@@ -4,6 +4,7 @@
 @implementation PongViewController
 
 @synthesize glView;
+@synthesize ivPlayer1Touchpad;
 
 //---------------------------------------------------------------------
 + (void) initialize {
@@ -23,6 +24,17 @@
 - (void) loadView {
     [super loadView];
     [[UIApplication sharedApplication] setStatusBarHidden:YES animated:NO];
+    
+    glView = [[PongView alloc] initWithFrame:self.view.frame];
+    [self.view removeFromSuperview];
+    self.view = glView;
+    
+    ivPlayer1Touchpad = [[UIImageView alloc] initWithFrame:CGRectMake(0, glView.bounds.size.height - 64, 320, 64)];
+    ivPlayer1Touchpad.image = [UIImage imageNamed:@"touchpad.png"];
+    ivPlayer1Touchpad.userInteractionEnabled = YES;
+    ivPlayer1Touchpad.hidden = YES;
+    [self.glView addSubview:ivPlayer1Touchpad];
+    
     [self init];
 }
 //---------------------------------------------------------------------
@@ -41,8 +53,28 @@
 	// Release anything that's not essential, such as cached data
 }
 //---------------------------------------------------------------------
+- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    if([touch view] == ivPlayer1Touchpad) {
+        _Player1Paddle.x = [touch locationInView:self.view].x;
+        _Player1Paddle.y = [touch locationInView:self.view].y;
+        //NSLog(@"Breakpoint 1");
+    }
+}
+//---------------------------------------------------------------------
+- (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [[event allTouches] anyObject];
+    if([touch view] == ivPlayer1Touchpad) {
+        _Player1Paddle.x = [touch locationInView:self.view].x;
+        _Player1Paddle.y = [touch locationInView:self.view].y;
+    }
+}
+//---------------------------------------------------------------------
 - (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [self start];
+    UITouch *touch = [[event allTouches] anyObject];
+    if([touch view] == glView) {
+        [self start];
+    }
 }
 //---------------------------------------------------------------------
 - (void) transitionTo:(UIView *)view slideDirection:(int)style {/*
@@ -54,37 +86,40 @@
 }
 //---------------------------------------------------------------------
 - (void) updateBall {
-    CGRect bounds = [glView bounds];
+    GLfloat wallTop = glView.bounds.size.height - 12;
+    GLfloat wallRight = glView.bounds.size.width - 12;
+    GLfloat wallBottom = 64 + 12;
+    GLfloat wallLeft = 0 + 12;
     
     if(_ballDirection == 0) {
-         _ballPosition.x -= _ballVelocity.x;
-         _ballPosition.y -= _ballVelocity.y;
+         _ballPosition.x -= _ballPositionVelocity.x;
+         _ballPosition.y -= _ballPositionVelocity.y;
     } else if(_ballDirection == 1) {
-        _ballPosition.x += _ballVelocity.x;
-        _ballPosition.y -= _ballVelocity.y;
+        _ballPosition.x += _ballPositionVelocity.x;
+        _ballPosition.y -= _ballPositionVelocity.y;
     } else if(_ballDirection == 2) {
-        _ballPosition.x += _ballVelocity.x;
-        _ballPosition.y += _ballVelocity.y;
+        _ballPosition.x += _ballPositionVelocity.x;
+        _ballPosition.y += _ballPositionVelocity.y;
     } else if(_ballDirection == 3) {
-        _ballPosition.x -= _ballVelocity.x;
-        _ballPosition.y += _ballVelocity.y;
+        _ballPosition.x -= _ballPositionVelocity.x;
+        _ballPosition.y += _ballPositionVelocity.y;
     }
     
-    if(_ballDirection == 0 && _ballPosition.x < 0) {
+    if(_ballDirection == 0 && _ballPosition.x < wallLeft) {
         _ballDirection = 1;
-    } else if(_ballDirection == 0 && _ballPosition.y < 0) {
+    } else if(_ballDirection == 0 && _ballPosition.y < wallBottom) {
         _ballDirection = 3;
-    } else if(_ballDirection == 1 && _ballPosition.y < 0) {
+    } else if(_ballDirection == 1 && _ballPosition.y < wallBottom) {
         _ballDirection = 2;
-    } else if(_ballDirection == 1 && _ballPosition.x > bounds.size.width) {
+    } else if(_ballDirection == 1 && _ballPosition.x > wallRight) {
         _ballDirection = 0;
-    } else if(_ballDirection == 2 && _ballPosition.y > bounds.size.height) {
+    } else if(_ballDirection == 2 && _ballPosition.y > wallTop) {
         _ballDirection = 1;
-    } else if(_ballDirection == 2 && _ballPosition.x > bounds.size.width) {
+    } else if(_ballDirection == 2 && _ballPosition.x > wallRight) {
         _ballDirection = 3;
-    } else if(_ballDirection == 3 && _ballPosition.y > bounds.size.height) {
+    } else if(_ballDirection == 3 && _ballPosition.y > wallTop) {
         _ballDirection = 0;
-    } else if(_ballDirection == 3 && _ballPosition.x < 0) {
+    } else if(_ballDirection == 3 && _ballPosition.x < wallLeft) {
         _ballDirection = 2;
     }
 }
@@ -121,9 +156,7 @@
     // Load gameplay textures.
     _textures[kTexture_Ball] = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"ball.png"]];
     _textures[kTexture_Player1Paddle] = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"paddle.png"]];
-    _textures[kTexture_Player1TouchPad] = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"touchpad.png"]];
     _textures[kTexture_Player2Paddle] = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"paddle.png"]];
-    _textures[kTexture_Player2TouchPad] = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"touchpad.png"]];
     // Load label textures.
     _textures[kTexture_Player1LabelScore] = [[Texture2D alloc] initWithString:@"P1 Score:" dimensions:CGSizeMake(64, 32) alignment:UITextAlignmentLeft fontName:kFontName fontSize:kLabelFontSize];
     _textures[kTexture_Player2LabelScore] = [[Texture2D alloc] initWithString:@"P2 Score:" dimensions:CGSizeMake(64, 32) alignment:UITextAlignmentLeft fontName:kFontName fontSize:kLabelFontSize];
@@ -148,6 +181,9 @@
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         // Reset.
         [self reset];
+        // Init.
+        ivPlayer1Touchpad.hidden = NO;
+        //[glView setBounds:CGRectMake(0, 0, 320, 380)];
         _isFirstTap = NO;
     } else { // Either the user tapped to start a new game or the user successfully landed the rocket.
         // Stop rendering timer
@@ -176,12 +212,16 @@
     _Player2StatusScore = nil;
     
     // Init.
+    _Player1Paddle.x = bounds.size.width / 2;
+    _Player1Paddle.y = 0.0;
     _Player1Score = 0;
     _Player2Score = 0;
     _ballPosition.x = bounds.size.width / 2;
     _ballPosition.y = bounds.size.height / 2;
-    _ballVelocity.x = 2.0; // Pixels / 1 second.
-    _ballVelocity.y = 2.0; // Pixels / 1 second.
+    _ballPositionVelocity.x = 4.0; // Pixels / 1 second.
+    _ballPositionVelocity.y = 4.0; // Pixels / 1 second.
+    _ballRotation = 0.0;
+    _ballRotationVelocity = 1.0;
     _ballDirection = 1;
     
     // Render a frame immediately.
@@ -205,6 +245,7 @@
         
         // Update ball logic.
 		[self updateBall];
+        //_ballRotation += _ballRotationVelocity * timeDifference;
         // Update player 1 logic.
 		[self updatePlayer1];
         // Update player 2 logic.
@@ -222,12 +263,16 @@
     
     if(_state != kState_StandBy) {
         // Draw player 1 paddle.
+        glPushMatrix();
+        glTranslatef(_Player1Paddle.x, 76, 0);
+        [_textures[kTexture_Player1Paddle] drawAtPoint:CGPointZero];
+        glPopMatrix();
         
         // Draw overlay player 1 status.
         _Player1StatusScore = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%i", _Player1Score] dimensions:CGSizeMake(32, 32) alignment:UITextAlignmentCenter fontName:kFontName fontSize:kLabelFontSize];
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        [_textures[kTexture_Player1LabelScore] drawAtPoint:CGPointMake(64, 32)]; // Coordinates (0, 0) start at bottom left of screen.
-        [_Player1StatusScore drawAtPoint:CGPointMake(96 + 4, 32)];
+        [_textures[kTexture_Player1LabelScore] drawAtPoint:CGPointMake(64, 80)]; // Coordinates (0, 0) start at bottom left of screen.
+        [_Player1StatusScore drawAtPoint:CGPointMake(96 + 4, 80)];
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         
         // Draw player 2 paddle.
@@ -242,6 +287,7 @@
         // Draw ball.
         glPushMatrix();
         glTranslatef(_ballPosition.x, _ballPosition.y, 0);
+        glRotatef(_ballRotation, 0.0, 0.0, 1.0);
         [_textures[kTexture_Ball] drawAtPoint:CGPointZero];
         glPopMatrix();
     }
@@ -254,7 +300,8 @@
     [_Player1StatusScore release];
     [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
-    [glView dealloc];
+    [ivPlayer1Touchpad release];
+    [glView release];
 	[super dealloc];
 }
 

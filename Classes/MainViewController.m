@@ -17,12 +17,6 @@
 /* Implement loadView if you want to create a view hierarchy programmatically. */
 - (void) loadView {
     [super loadView];
-    /*
-    [btnCompany setTitle:strTitle forState:UIControlStateNormal];
-    [btnCompany setTitle:strTitle forState:UIControlStateHighlighted];
-    [btnCompany setTitle:strTitle forState:UIControlStateSelected];
-    [btnCompany setTitle:strTitle forState:UIControlStateDisabled];
-    */
     lblCompany.text = self.title;
 }
 //---------------------------------------------------------------------

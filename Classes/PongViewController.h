@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-13
-    - Modified: 2008-08-14
+    - Modified: 2008-08-15
     .
 @note
     References:
@@ -77,6 +77,7 @@ typedef struct	{
 @interface PongViewController : UIViewController {
 @public
     IBOutlet PongView *glView;
+    IBOutlet UIImageView *ivPlayer1Touchpad;
 @protected
     Texture2D *_textures[kNumTextures];
     UInt32 _sounds[kNumSounds];
@@ -86,9 +87,12 @@ typedef struct	{
 	State _state;
     CFTimeInterval _timeBegin;
     Vector2D _ballPosition;
-    Vector2D _ballVelocity;
+    Vector2D _ballPositionVelocity;
+    GLfloat _ballRotation;
+    GLfloat _ballRotationVelocity;
     unsigned int _ballDirection;
     
+    Vector2D _Player1Paddle;
     unsigned int _Player1Score;
     Texture2D *_Player1StatusScore;
     unsigned int _Player2Score;
@@ -96,6 +100,7 @@ typedef struct	{
 }
 
 @property (nonatomic, retain) PongView *glView;
+@property (nonatomic, retain) UIImageView *ivPlayer1Touchpad;
 
 - (void) transitionTo:(UIView *)view slideDirection:(int)style;
 - (void) updateBall;

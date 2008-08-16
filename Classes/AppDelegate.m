@@ -31,7 +31,7 @@
 
     [UIView beginAnimations:nil	context:NULL];
     [UIView setAnimationDuration:1.0];
-    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:self.window cache:YES];
+    [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromRight forView:self.window cache:YES];
     [vcMain.view removeFromSuperview];
     [self.window addSubview:vcConsole.view];
     [UIView commitAnimations];
