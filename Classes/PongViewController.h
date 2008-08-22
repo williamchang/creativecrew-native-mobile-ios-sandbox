@@ -17,13 +17,21 @@
         - https://developer.apple.com/iphone/library/navigation/index.html
         - http://developer.apple.com/iphone/library/navigation/Frameworks/Media/OpenGLES/index.html
         .
+    - Objective-C++:
+        - http://www.cocoabuilder.com/archive/message/cocoa/2008/3/20/201886
+        - http://cocoadev.com/index.pl?ObjectiveCPlusPlus
+        - http://developer.apple.com/documentation/Cocoa/Conceptual/ObjectiveC/Articles/chapter_13_section_3.html
+        - http://en.wikipedia.org/wiki/Forward_declaration
+        .
     .
 */
 
 #import <UIKit/UIKit.h>
 #import "Texture2D.h"
 
+// Forward declaration.
 @class PongView;
+@class DebugDraw;
 
 // Simulation definition.
 #define kFontName @"Arial"
@@ -74,6 +82,10 @@ typedef struct	{
     GLfloat x, y;
 } Vector2D;
 
+// Forward declaration using "struct" instead C++ "class" for Objective-C compatibility.
+typedef struct b2World b2World;
+typedef struct b2Body b2Body;
+
 @interface PongViewController : UIViewController {
 @public
     IBOutlet PongView *glView;
@@ -97,6 +109,30 @@ typedef struct	{
     Texture2D *_Player1StatusScore;
     unsigned int _Player2Score;
     Texture2D *_Player2StatusScore;
+@private
+    b2World *world;
+    GLfloat worldTimeStep;
+    GLint worldIterationCount;
+    
+    /** last time the main loop was updated */
+	struct timeval lastUpdate;
+	/** delta time since last tick to main loop */
+	GLfloat dt;
+    // Debug render fps.
+	GLint frames;
+	GLfloat accumDt;
+	GLfloat frameRate;
+    // Debug lines.
+    DebugDraw *physicsDebugDraw;
+    
+    GLfloat _cameraOffsetX;
+    GLfloat _cameraOffsetY;
+    GLfloat _cameraOffsetZ;
+    
+    b2Body *bodyBall;
+    b2Body *bodyPlayer1Paddle;
+    
+    bool isFirstForces;
 }
 
 @property (nonatomic, retain) PongView *glView;
@@ -107,11 +143,13 @@ typedef struct	{
 - (void) updatePlayer1;
 - (void) updatePlayer2;
 - (void) initRender;
-- (void) initPhysics;
-- (void) updatePhysics;
+- (void) setProjection2D;
+- (void) setProjection3D;
 - (void) start;
 - (void) renderOneFrame;
 - (void) reset;
 - (void) save;
+- (void) showRenderFps;
+- (void) calculateDeltaTime;
 
 @end

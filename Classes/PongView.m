@@ -1,7 +1,6 @@
 #import "PongView.h"
 
 @implementation PongView
-
 //---------------------------------------------------------------------
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
@@ -17,5 +16,5 @@
 - (void) dealloc {
 	[super dealloc];
 }
-
+//---------------------------------------------------------------------
 @end

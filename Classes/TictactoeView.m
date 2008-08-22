@@ -1,7 +1,6 @@
 #import "TictactoeView.h"
 
 @implementation TictactoeView
-
 //---------------------------------------------------------------------
 - (id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
@@ -17,5 +16,5 @@
 - (void) dealloc {
 	[super dealloc];
 }
-
+//---------------------------------------------------------------------
 @end

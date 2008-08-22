@@ -1,7 +1,6 @@
 #import "TictactoeViewController.h"
 
 @implementation TictactoeViewController
-
 //---------------------------------------------------------------------
 - (id) initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
 	if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
@@ -34,5 +33,5 @@
 - (void) dealloc {
 	[super dealloc];
 }
-
+//---------------------------------------------------------------------
 @end
