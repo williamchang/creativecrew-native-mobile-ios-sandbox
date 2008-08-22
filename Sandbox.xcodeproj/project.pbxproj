@@ -80,7 +80,7 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* Sandbox_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sandbox_Prefix.pch; sourceTree = "<group>"; };
 		730584F60E5717D90051D533 /* TictactoeViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TictactoeViewController.mm; path = Classes/TictactoeViewController.mm; sourceTree = "<group>"; };
-		730584F70E5717D90051D533 /* PongViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PongViewController.mm; path = Classes/PongViewController.mm; sourceTree = "<group>"; };
+		730584F70E5717D90051D533 /* PongViewController.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = PongViewController.mm; path = Classes/PongViewController.mm; sourceTree = "<group>"; };
 		730B23930E54C75C00FD059A /* TictactoeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TictactoeViewController.h; path = Classes/TictactoeViewController.h; sourceTree = "<group>"; };
 		730B24BD0E54CDC400FD059A /* TictactoeView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TictactoeView.h; path = Classes/TictactoeView.h; sourceTree = "<group>"; };
 		730B24BE0E54CDC400FD059A /* TictactoeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TictactoeView.m; path = Classes/TictactoeView.m; sourceTree = "<group>"; };

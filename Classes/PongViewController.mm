@@ -98,6 +98,19 @@
     [view becomeFirstResponder];*/
 }
 //---------------------------------------------------------------------
+- (CGRect) getViewVirtualBounds {
+    // Apple iPhone fullscreen in portrait width 320px and height 480px.
+    CGRect b = [[UIScreen mainScreen] bounds];
+    //CGRect b = self.view.bounds;
+    //CGRect b = self.glView.bounds;
+    
+    // Scale.
+    b.size.width /= 16; // 20 units.
+    b.size.height /= 16; // 30 units.
+    
+    return b;
+}
+//---------------------------------------------------------------------
 - (void) updateBall {
     GLfloat wallTop = glView.bounds.size.height - 12;
     GLfloat wallRight = glView.bounds.size.width - 12;
@@ -152,7 +165,7 @@
     // Set camera.
     _cameraOffsetX = 0.0;
     _cameraOffsetY = 0.0;
-    _cameraOffsetZ = 5.0;
+    _cameraOffsetZ = 0.0;
     [self setProjection3D];
     
     // Initialize OpenGL states.
@@ -179,7 +192,7 @@
 
     // Render the title frame.
     glDisable(GL_BLEND);
-    [_textures[kTexture_Title] drawInRect:[glView bounds]];
+    [_textures[kTexture_Title] drawInRect:[self getViewVirtualBounds]];
     glEnable(GL_BLEND);
 
     // Swap the framebuffer.
@@ -187,30 +200,30 @@
 }
 //---------------------------------------------------------------------
 - (void) setProjection2D {
-    CGRect rect = [[UIScreen mainScreen] bounds];
+    CGRect bounds = [self getViewVirtualBounds];
     
     // Initialize OpenGL projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrthof(0, rect.size.width, 0, rect.size.height, -10, 10); // Left, right, bottom, near, far.
+    glOrthof(0, bounds.size.width, 0, bounds.size.height, -10, 10); // Left, right, bottom, near, far.
     glMatrixMode(GL_MODELVIEW); // Make OpenGL matrix mode default to modelview.
     glLoadIdentity();
 }
 //---------------------------------------------------------------------
 - (void) setProjection3D {
-    CGRect rect = [[UIScreen mainScreen] bounds];
-    GLfloat eyeZ = rect.size.height / 1.1566;
-    eyeZ -= -200;
+    CGRect bounds = [self getViewVirtualBounds];
+    GLfloat eyeZ = bounds.size.height / 1.1566;
+    eyeZ += 0.0; // Positive: zoom out, negative: zoom in.
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, (GLfloat)rect.size.width / (GLfloat)rect.size.height, 0.5, 1500.0); // Field of view, aspect, near, far.
+    gluPerspective(60.0, (GLfloat)bounds.size.width / (GLfloat)bounds.size.height, 0.5, 1500.0); // Field of view, aspect, near, far.
     glMatrixMode(GL_MODELVIEW);	
     glLoadIdentity();
 
     gluLookAt(
-        rect.size.width / 2, rect.size.height / 2, eyeZ, // Eye x, y, z.
-        rect.size.width / 2, rect.size.height / 2, 0.0, // Look at x, y, z.
+        bounds.size.width / 2, bounds.size.height / 2, eyeZ, // Eye x, y, z.
+        bounds.size.width / 2, bounds.size.height / 2, -100.0, // Look at x, y, z.
         0.0, 1.0, 0.0 // Up x, y, z.
     );
 }
@@ -218,17 +231,17 @@
 // C++ binding layer.
 - (void) initPhysics {
     // Get objective c values.
-    GLfloat canvasWidth = self.view.bounds.size.width;
-    GLfloat canvasHeight = self.view.bounds.size.height;
+    GLfloat canvasWidth = [self getViewVirtualBounds].size.width;
+    GLfloat canvasHeight = [self getViewVirtualBounds].size.height;
     
     // Define the size of the world.
     b2AABB worldAABB;
-    worldAABB.upperBound.Set(canvasWidth, canvasHeight);
-    worldAABB.lowerBound.Set(-10.0, -10.0);
+    worldAABB.upperBound.Set(canvasWidth, canvasHeight); // Extend to the top right of screen.
+    worldAABB.lowerBound.Set(0.0, 0.0); // Coordinates (0, 0) start at bottom left of screen.
     
-    // Define the gravity vector.
+    // Define the gravity vector. Earth gravity -9.8 m/s^2.
     b2Vec2 gravity;
-    gravity.Set(0.0, -9.8);
+    gravity.Set(0.0, -0.8);
     
     // Let rigid bodies sleep.
     bool isBodiesSleep = true;
@@ -239,11 +252,20 @@
     // Debugging.
     physicsDebugDraw = [[DebugDraw alloc] init];
     [physicsDebugDraw setPhyicsWorld:world];
+
+    
+    
+    [self createBodyStatic:canvasWidth / 2 with:canvasHeight - 0.2 width:canvasWidth / 2 height:0.2]; // Ceiling.
+    [self createBodyStatic:canvasWidth / 2 with:0.2 width:canvasWidth / 2 height:0.2]; // Floor.
+
+    [self createBodyStatic:0.2 with:canvasHeight / 2 width:0.2 height:(canvasHeight / 2) - 0.4]; // Left wall.
+    [self createBodyStatic:canvasWidth - 0.2 with:canvasHeight / 2 width:0.2 height:(canvasHeight / 2) - 0.4]; // Right wall.
+    
     
     // Define the body shape.
     b2CircleDef bodyBallShapeDefine;
     // Set radius to circle.
-    bodyBallShapeDefine.radius = 10.0;
+    bodyBallShapeDefine.radius = 1.0;
     // Set the box density to be non-zero, so it will be dynamic.
     bodyBallShapeDefine.density = 1.0;
     // Set fricition (coulomb friction) range 0.0 - 1.0.
@@ -254,7 +276,7 @@
     // Define the rigid body.
     b2BodyDef bodyBallDefine;
     // Set position.
-    bodyBallDefine.position.Set(canvasWidth / 2, canvasHeight / 2);
+    bodyBallDefine.position.Set(10.0, canvasHeight / 2);
     
     // Create rigid body from definition.
     bodyBall = world->CreateBody(&bodyBallDefine);
@@ -264,12 +286,10 @@
     bodyBall->SetMassFromShapes();
 
      
-     
     
-    /*
     // Define the body shape.
     b2PolygonDef bodyPaddleShapeDefine;
-    bodyPaddleShapeDefine.SetAsBox(0.32, 0.08);
+    bodyPaddleShapeDefine.SetAsBox(2.0, 0.5);
     bodyPaddleShapeDefine.density = 1.0;
     
     // Define the rigid body.
@@ -282,7 +302,8 @@
     // Add the shape to the body.
     bodyPlayer1Paddle->CreateShape(&bodyPaddleShapeDefine);
     bodyPlayer1Paddle->SetMassFromShapes();
-*/
+
+    
     
     // Prepare for simulation. Typically we use a time step of 1/60 of a
     // second (60Hz) and 10 iterations. This provides a high quality simulation
@@ -291,13 +312,6 @@
     worldIterationCount = 10;
     
     isFirstForces = true;
-    
-    [self createBodyStatic:0 with:0 width:10.0 height:40.0]; // Center.
-    
-    [self createBodyStatic:0.0 with:canvasHeight width:canvasWidth height:10.0]; // Ceiling.
-    //[self createBodyStatic:canvasWidth with:0.0 width:10.0 height:canvasHeight]; // Right wall.
-    //[self createBodyStatic:-10.0 with:0.0 width:10.0 height:canvasHeight]; // Left wall.
-    //[self createBodyStatic:0.0 with:-10.0 width:-10.0 height:10.0]; // Floor.
 }
 //---------------------------------------------------------------------
 // C++ binding layer.
@@ -305,10 +319,11 @@
     // Define the body shape.
     b2PolygonDef bodyGenericShapeDefine;
     bodyGenericShapeDefine.SetAsBox(w, h);
+    bodyGenericShapeDefine.density = 0.0;
     
     // Define the rigid body.
     b2BodyDef bodyGenericDefine;
-    bodyGenericDefine.position.Set(x, y);
+    bodyGenericDefine.position.Set(x, y); // Position by center.
     
     // Create rigid body from definition.
     b2Body *bodyGeneric = world->CreateBody(&bodyGenericDefine);
@@ -319,25 +334,25 @@
 //---------------------------------------------------------------------
 // C++ binding layer.
 - (void) updatePhysics {
+    // Clear viewport.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // Set debug.
     GLuint flags = 0;
-	flags += b2DebugDraw::e_shapeBit * 0; // Shape outlines.
+	flags += b2DebugDraw::e_shapeBit * 1; // Shape outlines.
 	flags += b2DebugDraw::e_jointBit * 0; // Joint connectivity.
 	flags += b2DebugDraw::e_coreShapeBit * 0; // Core shapes (for continuous collision).
-	flags += b2DebugDraw::e_aabbBit * 1; // Broad-phase axis-aligned bounding boxes (AABBs), including the world AABB.
+	flags += b2DebugDraw::e_aabbBit * 0; // Broad-phase axis-aligned bounding boxes (AABBs), including the world AABB.
 	flags += b2DebugDraw::e_obbBit * 0; // Polygon oriented bounding boxes (OBBs).
 	flags += b2DebugDraw::e_pairBit * 0; // Broad-phase pairs (potential contacts).
 	flags += b2DebugDraw::e_centerOfMassBit * 0; // Center of mass.
     [physicsDebugDraw setFlags:flags];
     
-    // Clear viewport.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    /* calculate "global" dt */
+    // Globally calculate delta time.
 	[self calculateDeltaTime];
     
-    glPushMatrix();
+    // Show render fps.
     [self showRenderFps];
-    glPopMatrix();
     
     // Instruct the world to perform a single step of physics simulation.
     world->Step(worldTimeStep, worldIterationCount);
@@ -349,7 +364,7 @@
     
     if(isFirstForces) {
         // First vector is where the body should end up and the second vector is the body's center or it will spin.
-        //bodyBall->ApplyImpulse(b2Vec2(self.view.bounds.size.width / 2, self.view.bounds.size.height), bodyBall->GetWorldCenter());
+        bodyBall->ApplyImpulse(b2Vec2(40, 40), bodyBall->GetWorldCenter());
         isFirstForces = false;
     }
 }
@@ -382,7 +397,7 @@
 }
 //---------------------------------------------------------------------
 - (void) reset {
-    CGRect bounds = [glView bounds];
+    CGRect bounds = [self getViewVirtualBounds];
     _state = kState_Running;
     _timeBegin = CFAbsoluteTimeGetCurrent();
     
@@ -416,7 +431,7 @@
 }
 //---------------------------------------------------------------------
 - (void) renderOneFrame {
-    CGRect bounds = [glView bounds];
+    CGRect bounds = [self getViewVirtualBounds];
     CFTimeInterval timeCurrent;
     float timeDifference;
     
@@ -447,8 +462,8 @@
     if(_state != kState_StandBy) {
         // Draw player 1 paddle.
         glPushMatrix();
-        glTranslatef(_Player1Paddle.x, 76, 0);
-        [_textures[kTexture_Player1Paddle] drawAtPoint:CGPointZero];
+            glTranslatef(_Player1Paddle.x, 76, 0);
+            [_textures[kTexture_Player1Paddle] drawAtPoint:CGPointZero];
         glPopMatrix();
         
         // Draw overlay player 1 status.
@@ -469,9 +484,9 @@
         
         // Draw ball.
         glPushMatrix();
-        glTranslatef(_ballPosition.x, _ballPosition.y, 0);
-        glRotatef(_ballRotation, 0.0, 0.0, 1.0);
-        [_textures[kTexture_Ball] drawAtPoint:CGPointZero];
+            glTranslatef(_ballPosition.x, _ballPosition.y, 0);
+            glRotatef(_ballRotation, 0.0, 0.0, 1.0);
+            [_textures[kTexture_Ball] drawAtPoint:CGPointZero];
         glPopMatrix();
     }
     */
@@ -489,14 +504,19 @@
         accumDt = 0;
 	}
     
-	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", frameRate] dimensions:CGSizeMake(100,30) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:14];
-	//glEnable(GL_TEXTURE_2D);
+	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", frameRate] dimensions:CGSizeMake(40, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
+	
+    //glEnable(GL_TEXTURE_2D);
 	//glEnableClientState(GL_VERTEX_ARRAY);
 	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	[texture drawAtPoint:CGPointMake(60,20)];
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glPushMatrix();
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glScalef(0.1, 0.1, 1.0);
+        glColor4f(1.0, 0.0, 0.0, 1.0);
+        [texture drawAtPoint:CGPointMake(30, 15)];
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glPopMatrix();
     
 	//glDisable(GL_TEXTURE_2D);
 	//glDisableClientState(GL_VERTEX_ARRAY);
@@ -521,6 +541,7 @@
     [_Player1StatusScore release];
     [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
+    [physicsDebugDraw release];
     delete world; // C++
     [ivPlayer1Touchpad release];
     [glView release];

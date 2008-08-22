@@ -151,7 +151,7 @@ public:
         va_list args;
         va_start(args, string);
         
-        Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithCString:args] dimensions:CGSizeMake(128, 32) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:14];
+        Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithCString:args] dimensions:CGSizeMake(128, 32) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         [texture drawAtPoint:CGPointMake(x, y)];
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

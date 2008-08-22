@@ -211,7 +211,7 @@ Copyright (C) 2008 Apple Inc. All Rights Reserved.
     if(oldContext != _context) {
         [EAGLContext setCurrentContext:_context];
     }
-    glGetIntegerv(GL_RENDERBUFFER_BINDING_OES, (GLint *) &oldRenderbuffer);
+    glGetIntegerv(GL_RENDERBUFFER_BINDING_OES, (GLint *)&oldRenderbuffer);
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, _renderbuffer);
     if(![_context presentRenderbuffer:GL_RENDERBUFFER_OES]) {
         printf("Failed to swap renderbuffer in %s\n", __FUNCTION__);
@@ -236,5 +236,5 @@ Copyright (C) 2008 Apple Inc. All Rights Reserved.
     [_context release];_context = nil;
 	[super dealloc];
 }
-
+//---------------------------------------------------------------------
 @end

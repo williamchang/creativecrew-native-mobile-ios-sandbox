@@ -35,7 +35,7 @@
 
 // Simulation definition.
 #define kFontName @"Arial"
-#define kLabelFontSize 14
+#define kLabelFontSize 15
 
 #define kUserNameDefaultKey @"userName" // NSString.
 #define kHighScoresDefaultKey @"highScores" // NSArray of NSStrings.
@@ -138,6 +138,7 @@ typedef struct b2Body b2Body;
 @property (nonatomic, retain) PongView *glView;
 @property (nonatomic, retain) UIImageView *ivPlayer1Touchpad;
 
+- (CGRect) getViewVirtualBounds;
 - (void) transitionTo:(UIView *)view slideDirection:(int)style;
 - (void) updateBall;
 - (void) updatePlayer1;
