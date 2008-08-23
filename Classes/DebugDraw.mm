@@ -2,6 +2,36 @@
 #import "Texture2D.h"
 #import "Box2D.h"
 
+#define kMaxContactPoints 2048
+
+enum ContactState {
+    e_contactAdded,
+    e_contactPersisted,
+    e_contactRemoved,
+};
+
+struct ContactPoint {
+    b2Shape *shape1;
+    b2Shape *shape2;
+    b2Vec2 normal;
+    b2Vec2 position;
+    b2Vec2 velocity;
+    b2ContactID id;
+    ContactState state;
+};
+
+/** Intermediate class for Objective-C, a C++ wrapper. */
+class CppDebugWrapper {
+public:
+    /** Default constructor. */
+    CppDebugWrapper() {}
+    /** Default destructor. */
+    virtual ~CppDebugWrapper() {}
+    
+    ContactPoint points[kMaxContactPoints];
+    GLint pointCount;
+};
+
 /** This class implements debug drawing callbacks that are invoked inside b2World::Step. */
 class CppDebugDraw : public b2DebugDraw {
 public:
@@ -137,14 +167,13 @@ public:
     }
     /** Draw a point. */
     void DrawPoint(const b2Vec2& p, float32 size, const b2Color& color) {
-        glColor4f(color.r, color.g, color.b, 1.0);
         glPointSize(size);
+        glColor4f(color.r, color.g, color.b, 1.0);
         _V[0] = p.x;
         _V[1] = p.y;
         glVertexPointer(2, GL_FLOAT, 0, _V);
         glEnableClientState(GL_VERTEX_ARRAY);
         glDrawArrays(GL_POINTS, 0, 1);
-        glPointSize(1.0);
     }
     /** Draw a string of text using ellipsis operator. */
     void DrawString(int x, int y, const char *string, ...) {
@@ -155,6 +184,7 @@ public:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         [texture drawAtPoint:CGPointMake(x, y)];
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        [texture release];
         
         va_end(args);        
     }
@@ -178,26 +208,273 @@ protected:
     GLfloat _V[256];
 };
 
+/** This class implements collision callbacks. */
+class CppContactListener : public b2ContactListener {
+public:
+    /** Called when a contact point is added. This includes the geometry and the forces. */
+    void Add(const b2ContactPoint* point) {
+        if(m->pointCount == kMaxContactPoints) {
+            return;
+        }
+
+        ContactPoint *cp = m->points + m->pointCount;
+        cp->shape1 = point->shape1;
+        cp->shape2 = point->shape2;
+        cp->position = point->position;
+        cp->normal = point->normal;
+        cp->id = point->id;
+        cp->state = e_contactAdded;
+
+        m->pointCount++;
+    }
+    /** Called when a contact point persists. This includes the geometry and the forces. */
+    void Persist(const b2ContactPoint* point) {
+        if(m->pointCount == kMaxContactPoints) {
+            return;
+        }
+        
+        ContactPoint *cp = m->points + m->pointCount;
+        cp->shape1 = point->shape1;
+        cp->shape2 = point->shape2;
+        cp->position = point->position;
+        cp->normal = point->normal;
+        cp->id = point->id;
+        cp->state = e_contactPersisted;
+
+        m->pointCount++;
+    }
+    /** Called when a contact point is removed. This includes the last computed geometry and forces. */
+    void Remove(const b2ContactPoint* point) {
+        if(m->pointCount == kMaxContactPoints) {
+            return;
+        }
+        
+        ContactPoint *cp = m->points + m->pointCount;
+        cp->shape1 = point->shape1;
+        cp->shape2 = point->shape2;
+        cp->position = point->position;
+        cp->normal = point->normal;
+        cp->id = point->id;
+        cp->state = e_contactRemoved;
+        
+        m->pointCount++;
+    }
+    
+    CppDebugWrapper *m;
+};
+
 @implementation DebugDraw
 //---------------------------------------------------------------------
 - (id) init {
     if(self = [super init]) {
-        _cpp = new CppDebugDraw();
+        _cppDebugWrapper = new CppDebugWrapper();
+        _cppDebugDraw = new CppDebugDraw();
+        _x = 0.0;
+        _y = 0.0;
+        _jointPicker = NULL;
     }
     return self;
 }
 //---------------------------------------------------------------------
 - (void) setPhyicsWorld:(b2World *)w {
     _physicsWorld = w;
-    _physicsWorld->SetDebugDraw(_cpp);
+    _physicsWorld->SetDebugDraw(_cppDebugDraw);
+    CppContactListener *contactListener = new CppContactListener();
+    contactListener->m = _cppDebugWrapper;
+    _physicsWorld->SetContactListener(contactListener);
 }
 //---------------------------------------------------------------------
-- (void) setFlags:(GLuint)f {
-    _cpp->SetFlags(f);
+- (void) setPhysicsDebugFlags:(GLuint)f {
+    _cppDebugDraw->SetFlags(f);
+}
+//---------------------------------------------------------------------
+- (void) calculateDeltaTime {
+    struct timeval timeNow;
+    
+    if(gettimeofday(&timeNow, NULL) != 0) {
+        NSException* myException = [NSException exceptionWithName:@"GetTimeOfDay" reason:@"GetTimeOfDay abnormal error" userInfo:nil];
+        @throw myException;
+    }
+    // Get new delta time.
+    _deltaTime = (timeNow.tv_sec - _timeLast.tv_sec) + (timeNow.tv_usec - _timeLast.tv_usec) / 1000000.0;
+    _timeLast = timeNow;
+}
+//---------------------------------------------------------------------
+- (void) showFps {
+	_frameCount++;
+	_deltaTimeCount += _deltaTime;
+    
+	if(_deltaTimeCount > 0.3)  {
+        _frameRate = _frameCount / _deltaTimeCount;
+        _frameCount = 0;
+        _deltaTimeCount = 0;
+	}
+    
+	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", _frameRate] dimensions:CGSizeMake(40, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
+	
+    //glEnable(GL_TEXTURE_2D);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glPushMatrix();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glScalef(0.1, 0.1, 1.0);
+    glColor4f(1.0, 0.0, 0.0, 1.0);
+    [texture drawAtPoint:CGPointMake(30, 15)];
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glPopMatrix();
+    
+	//glDisable(GL_TEXTURE_2D);
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    [texture release];
+}
+//---------------------------------------------------------------------
+- (void) setCoordinates:(GLfloat)x with:(GLfloat)y {
+    _x = x;
+    _y = y;
+}
+//---------------------------------------------------------------------
+- (void) showCoordinates {
+    Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"(X:%.2f Y:%.2f)", _x, _y] dimensions:CGSizeMake(136, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
+    
+    glPushMatrix();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glScalef(0.1, 0.1, 1.0);
+    glColor4f(0.0, 0.0, 1.0, 1.0);
+    [texture drawAtPoint:CGPointMake(75, 35)];
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glPopMatrix();
+    
+    [texture release];
+}
+//---------------------------------------------------------------------
+- (void) pickBodyBegan:(GLfloat)x with:(GLfloat)y {
+    if(_jointPicker != NULL) {
+        return;
+    }
+    
+    // Get coordinates from input event.
+    b2Vec2 p;
+    p.Set(x, y);
+    
+    // Set coordinates.
+    [self setCoordinates:x with:y];
+    
+    // Create a small box.
+    b2AABB aabb;
+    b2Vec2 d;
+    d.Set(0.001, 0.001);
+    aabb.lowerBound = p - d;
+    aabb.upperBound = p + d;
+    
+    // Query the world for overlapping shapes.
+	const GLint k_maxCount = 10;
+	b2Shape *shapes[k_maxCount];
+	int32 count = _physicsWorld->Query(aabb, shapes, k_maxCount);
+	b2Body *body = NULL;
+	for(GLint i = 0;i < count;i++) {
+        b2Body* shapeBody = shapes[i]->GetBody();
+        if(shapeBody->IsStatic() == false && shapeBody->GetMass() > 0.0) {
+            bool inside = shapes[i]->TestPoint(shapeBody->GetXForm(), p);
+            if(inside) {
+                body = shapes[i]->GetBody();
+                break;
+            }
+        }
+	}
+    
+    if(body) {
+        b2MouseJointDef md;
+        md.body1 = _physicsWorld->GetGroundBody();
+        md.body2 = body;
+        md.target = p;
+        md.maxForce = 1000.0 * body->GetMass();
+        _jointPicker = (b2MouseJoint *)_physicsWorld->CreateJoint(&md);
+		body->WakeUp();
+    }
+}
+//---------------------------------------------------------------------
+- (void) pickBodyMoved:(GLfloat)x with:(GLfloat)y {
+    if(_jointPicker) {
+        b2Vec2 p;
+        p.Set(x, y);
+        _jointPicker->SetTarget(p);
+    }
+}
+//---------------------------------------------------------------------
+- (void) pickBodyEnded {
+    if(_jointPicker) {
+        _physicsWorld->DestroyJoint(_jointPicker);
+        _jointPicker = NULL;
+    }
+}
+//---------------------------------------------------------------------
+- (BOOL) frameStarted {
+    // Clear viewport.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // Globally calculate delta time.
+	[self calculateDeltaTime];
+    
+    // Show frames per second.
+    [self showFps];
+    
+    // Show coordinates.
+    [self showCoordinates];
+    
+    // Show picker.
+    if(_jointPicker) {
+        b2Body *body = _jointPicker->GetBody2();
+        b2Vec2 p1 = body->GetWorldPoint(_jointPicker->m_localAnchor);
+        b2Vec2 p2 = _jointPicker->m_target;
+
+        glPointSize(4.0);
+        GLfloat _V[4];
+        glColor4f(0.0, 1.0, 0.0, 1.0);
+        _V[0] = p1.x; _V[1] = p1.y;
+        _V[2] = p2.x; _V[3] = p2.y;
+        glVertexPointer(2, GL_FLOAT, 0, _V);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glDrawArrays(GL_POINTS, 0, 2);
+        
+        glPointSize(1.0);
+        glColor4f(0.8, 0.8, 0.8, 1.0);
+        _V[0] = p1.x; _V[1] = p1.y;
+        _V[2] = p2.x; _V[3] = p2.y;
+        glVertexPointer(2, GL_FLOAT, 0, _V);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glDrawArrays(GL_LINES, 0, 2);
+    }
+    
+    // Empty contact points from previous frame.
+    _cppDebugWrapper->pointCount = 0;
+
+    return YES;
+}
+//---------------------------------------------------------------------
+- (BOOL) frameEnded {
+    // Show contact points.
+    for(GLint i = 0;i < _cppDebugWrapper->pointCount;i++) {
+        ContactPoint *point = _cppDebugWrapper->points + i;
+        
+        if(point->state == 0) { // Add
+            _cppDebugDraw->DrawPoint(point->position, 10.0, b2Color(0.3, 0.95, 0.3));
+        } else if (point->state == 1) { // Persist
+            _cppDebugDraw->DrawPoint(point->position, 5.0, b2Color(0.3, 0.3, 0.95));
+        } else { // Remove
+            _cppDebugDraw->DrawPoint(point->position, 10.0, b2Color(0.95, 0.3, 0.3));
+        }
+    }
+    
+    return YES;
 }
 //---------------------------------------------------------------------
 - (void) dealloc {
-    delete _cpp;
+    delete _jointPicker;
+    delete _cppDebugDraw;
+    delete _cppDebugWrapper;
     delete _physicsWorld;
     [super dealloc];
 }

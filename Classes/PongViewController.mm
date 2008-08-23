@@ -1,6 +1,5 @@
 #import "PongViewController.h"
 #import "PongView.h"
-#import <sys/time.h>
 #import "glu.h"
 #import "Box2D.h"
 #import "DebugDraw.h"
@@ -72,6 +71,10 @@
         _Player1Paddle.x = [touch locationInView:self.view].x;
         _Player1Paddle.y = [touch locationInView:self.view].y;
         //NSLog(@"Breakpoint 1");
+    } else if([touch view] == glView) {
+        GLfloat x = [touch locationInView:self.view].x / 16;
+        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30);
+        [_physicsDebugDraw pickBodyBegan:x with:y];
     }
 }
 //---------------------------------------------------------------------
@@ -80,6 +83,10 @@
     if([touch view] == ivPlayer1Touchpad) {
         _Player1Paddle.x = [touch locationInView:self.view].x;
         _Player1Paddle.y = [touch locationInView:self.view].y;
+    } else if([touch view] == glView) {
+        GLfloat x = [touch locationInView:self.view].x / 16;
+        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30);
+        [_physicsDebugDraw pickBodyMoved:x with:y];
     }
 }
 //---------------------------------------------------------------------
@@ -87,6 +94,7 @@
     UITouch *touch = [[event allTouches] anyObject];
     if([touch view] == glView) {
         [self start];
+        [_physicsDebugDraw pickBodyEnded];
     }
 }
 //---------------------------------------------------------------------
@@ -244,19 +252,19 @@
     gravity.Set(0.0, -0.8);
     
     // Let rigid bodies sleep.
-    bool isBodiesSleep = true;
+    bool letBodiesSleep = true;
     
     // Construct a world object.
-    world = new b2World(worldAABB, gravity, isBodiesSleep);
+    _physicsWorld = new b2World(worldAABB, gravity, letBodiesSleep);
     
     // Debugging.
-    physicsDebugDraw = [[DebugDraw alloc] init];
-    [physicsDebugDraw setPhyicsWorld:world];
+    _physicsDebugDraw = [[DebugDraw alloc] init];
+    [_physicsDebugDraw setPhyicsWorld:_physicsWorld];
 
     
     
     [self createBodyStatic:canvasWidth / 2 with:canvasHeight - 0.2 width:canvasWidth / 2 height:0.2]; // Ceiling.
-    [self createBodyStatic:canvasWidth / 2 with:0.2 width:canvasWidth / 2 height:0.2]; // Floor.
+    b2Body *bodyGround = [self createBodyStatic:canvasWidth / 2 with:0.2 width:canvasWidth / 2 height:0.2]; // Floor.
 
     [self createBodyStatic:0.2 with:canvasHeight / 2 width:0.2 height:(canvasHeight / 2) - 0.4]; // Left wall.
     [self createBodyStatic:canvasWidth - 0.2 with:canvasHeight / 2 width:0.2 height:(canvasHeight / 2) - 0.4]; // Right wall.
@@ -279,7 +287,7 @@
     bodyBallDefine.position.Set(10.0, canvasHeight / 2);
     
     // Create rigid body from definition.
-    bodyBall = world->CreateBody(&bodyBallDefine);
+    bodyBall = _physicsWorld->CreateBody(&bodyBallDefine);
     // Add the shape to the body.
     bodyBall->CreateShape(&bodyBallShapeDefine);
     // Dynamically compute the body's mass base on its shape.
@@ -289,27 +297,38 @@
     
     // Define the body shape.
     b2PolygonDef bodyPaddleShapeDefine;
-    bodyPaddleShapeDefine.SetAsBox(2.0, 0.5);
+    bodyPaddleShapeDefine.SetAsBox(1.5, 0.3);
     bodyPaddleShapeDefine.density = 1.0;
     
     // Define the rigid body.
     b2BodyDef bodyPaddleDefine;
-    bodyPaddleDefine.position.Set(canvasWidth / 2, canvasHeight / 2);
+    bodyPaddleDefine.position.Set(canvasWidth / 2, 7.0);
     bodyPaddleDefine.fixedRotation = true;
     
     // Create rigid body from definition.
-    bodyPlayer1Paddle = world->CreateBody(&bodyPaddleDefine);
+    bodyPlayer1Paddle = _physicsWorld->CreateBody(&bodyPaddleDefine);
     // Add the shape to the body.
     bodyPlayer1Paddle->CreateShape(&bodyPaddleShapeDefine);
     bodyPlayer1Paddle->SetMassFromShapes();
 
+    // Define the joint.
+    b2PrismaticJointDef jointPaddleDefine;
+    jointPaddleDefine.Initialize(bodyGround, bodyPlayer1Paddle, bodyGround->GetWorldCenter(), b2Vec2(1.0, 0.0));
+    jointPaddleDefine.lowerTranslation = -8.0;
+    jointPaddleDefine.upperTranslation = 8.0;
+    jointPaddleDefine.enableLimit = true;
+    jointPaddleDefine.maxMotorForce = 1000.0;
+    jointPaddleDefine.motorSpeed = 2.0;
+    jointPaddleDefine.enableMotor = false;
     
+    // Create joint from definition.
+    jointPlayer1Paddle = (b2PrismaticJoint *)_physicsWorld->CreateJoint(&jointPaddleDefine);
     
     // Prepare for simulation. Typically we use a time step of 1/60 of a
     // second (60Hz) and 10 iterations. This provides a high quality simulation
     // in most game scenarios.
-    worldTimeStep = 1.0 / kRenderingFPS;
-    worldIterationCount = 10;
+    _physicsWorldTimeStep = 1.0 / kRenderingFPS;
+    _physicsWorldIterationCount = 10;
     
     isFirstForces = true;
 }
@@ -326,7 +345,7 @@
     bodyGenericDefine.position.Set(x, y); // Position by center.
     
     // Create rigid body from definition.
-    b2Body *bodyGeneric = world->CreateBody(&bodyGenericDefine);
+    b2Body *bodyGeneric = _physicsWorld->CreateBody(&bodyGenericDefine);
     // Add the shape to the body.
     bodyGeneric->CreateShape(&bodyGenericShapeDefine);
     return bodyGeneric;
@@ -334,28 +353,23 @@
 //---------------------------------------------------------------------
 // C++ binding layer.
 - (void) updatePhysics {
-    // Clear viewport.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
     // Set debug.
     GLuint flags = 0;
 	flags += b2DebugDraw::e_shapeBit * 1; // Shape outlines.
-	flags += b2DebugDraw::e_jointBit * 0; // Joint connectivity.
+	flags += b2DebugDraw::e_jointBit * 1; // Joint connectivity.
 	flags += b2DebugDraw::e_coreShapeBit * 0; // Core shapes (for continuous collision).
 	flags += b2DebugDraw::e_aabbBit * 0; // Broad-phase axis-aligned bounding boxes (AABBs), including the world AABB.
 	flags += b2DebugDraw::e_obbBit * 0; // Polygon oriented bounding boxes (OBBs).
 	flags += b2DebugDraw::e_pairBit * 0; // Broad-phase pairs (potential contacts).
 	flags += b2DebugDraw::e_centerOfMassBit * 0; // Center of mass.
-    [physicsDebugDraw setFlags:flags];
+    [_physicsDebugDraw setPhysicsDebugFlags:flags];
     
-    // Globally calculate delta time.
-	[self calculateDeltaTime];
-    
-    // Show render fps.
-    [self showRenderFps];
+    [_physicsDebugDraw frameStarted];
     
     // Instruct the world to perform a single step of physics simulation.
-    world->Step(worldTimeStep, worldIterationCount);
+    _physicsWorld->Step(_physicsWorldTimeStep, _physicsWorldIterationCount);
+    
+    [_physicsDebugDraw frameEnded];
     
     // Get the position and angle of the body.
     _ballPosition.x = bodyBall->GetPosition().x;
@@ -364,7 +378,7 @@
     
     if(isFirstForces) {
         // First vector is where the body should end up and the second vector is the body's center or it will spin.
-        bodyBall->ApplyImpulse(b2Vec2(40, 40), bodyBall->GetWorldCenter());
+        bodyBall->ApplyImpulse(b2Vec2(40.0, 40.0), bodyBall->GetWorldCenter());
         isFirstForces = false;
     }
 }
@@ -383,8 +397,8 @@
         _isFirstTap = NO;
     } else { // Either the user tapped to start a new game or the user successfully landed the rocket.
         // Stop rendering timer
-        [_timer invalidate];
-        _timer = nil;
+        //[_timer invalidate];
+        //_timer = nil;
 
         // In the lander was landed successfully, save the current score or start a new game
         if(_state == kState_Finish) {
@@ -494,56 +508,14 @@
     [glView swapBuffers];
 }
 //---------------------------------------------------------------------
-- (void) showRenderFps {
-	frames++;
-	accumDt += dt;
-    
-	if(accumDt > 0.3)  {
-        frameRate = frames / accumDt;
-        frames = 0;
-        accumDt = 0;
-	}
-    
-	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", frameRate] dimensions:CGSizeMake(40, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
-	
-    //glEnable(GL_TEXTURE_2D);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    glPushMatrix();
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glScalef(0.1, 0.1, 1.0);
-        glColor4f(1.0, 0.0, 0.0, 1.0);
-        [texture drawAtPoint:CGPointMake(30, 15)];
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glPopMatrix();
-    
-	//glDisable(GL_TEXTURE_2D);
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    [texture release];
-}
-//---------------------------------------------------------------------
-- (void) calculateDeltaTime {
-    struct timeval now;
-
-    if(gettimeofday(&now, NULL) != 0) {
-        NSException* myException = [NSException exceptionWithName:@"GetTimeOfDay" reason:@"GetTimeOfDay abnormal error" userInfo:nil];
-        @throw myException;
-    }
-    // Get new delta time.
-    dt = (now.tv_sec - lastUpdate.tv_sec) + (now.tv_usec - lastUpdate.tv_usec) / 1000000.0;
-    lastUpdate = now;
-}
-//---------------------------------------------------------------------
 - (void) dealloc {
     [_Player1StatusScore release];
     [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
-    [physicsDebugDraw release];
-    delete world; // C++
+    [_physicsDebugDraw release];
+    delete _physicsWorld; // C++
     [ivPlayer1Touchpad release];
+    [_timer release];
     [glView release];
     [super dealloc];
 }

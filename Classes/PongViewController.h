@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-13
-    - Modified: 2008-08-15
+    - Modified: 2008-08-23
     .
 @note
     References:
@@ -29,10 +29,6 @@
 #import <UIKit/UIKit.h>
 #import "Texture2D.h"
 
-// Forward declaration.
-@class PongView;
-@class DebugDraw;
-
 // Simulation definition.
 #define kFontName @"Arial"
 #define kLabelFontSize 15
@@ -43,9 +39,18 @@
 #define kAccelerometerFrequency 100 // Hz.
 #define kFilteringFactor 0.1 // For filtering out gravitational affects.
 
-#define kRenderingFPS 30.0 // Hz.
+#define kRenderingFPS 60.0 // Hz.
 
 #define kListenerDistance 1.0  // Used for creating a realistic sound field.
+
+// Forward declaration.
+@class PongView;
+@class DebugDraw;
+
+// Forward declaration using "struct" instead C++ "class" for Objective-C compatibility.
+typedef struct b2World b2World;
+typedef struct b2Body b2Body;
+typedef struct b2PrismaticJoint b2PrismaticJoint;
 
 // Texture list.
 enum {
@@ -82,10 +87,6 @@ typedef struct	{
     GLfloat x, y;
 } Vector2D;
 
-// Forward declaration using "struct" instead C++ "class" for Objective-C compatibility.
-typedef struct b2World b2World;
-typedef struct b2Body b2Body;
-
 @interface PongViewController : UIViewController {
 @public
     IBOutlet PongView *glView;
@@ -110,20 +111,12 @@ typedef struct b2Body b2Body;
     unsigned int _Player2Score;
     Texture2D *_Player2StatusScore;
 @private
-    b2World *world;
-    GLfloat worldTimeStep;
-    GLint worldIterationCount;
+    b2World *_physicsWorld;
+    GLfloat _physicsWorldTimeStep;
+    GLint _physicsWorldIterationCount;
     
-    /** last time the main loop was updated */
-	struct timeval lastUpdate;
-	/** delta time since last tick to main loop */
-	GLfloat dt;
-    // Debug render fps.
-	GLint frames;
-	GLfloat accumDt;
-	GLfloat frameRate;
     // Debug lines.
-    DebugDraw *physicsDebugDraw;
+    DebugDraw *_physicsDebugDraw;
     
     GLfloat _cameraOffsetX;
     GLfloat _cameraOffsetY;
@@ -131,6 +124,7 @@ typedef struct b2Body b2Body;
     
     b2Body *bodyBall;
     b2Body *bodyPlayer1Paddle;
+    b2PrismaticJoint *jointPlayer1Paddle;
     
     bool isFirstForces;
 }
@@ -150,7 +144,5 @@ typedef struct b2Body b2Body;
 - (void) renderOneFrame;
 - (void) reset;
 - (void) save;
-- (void) showRenderFps;
-- (void) calculateDeltaTime;
 
 @end

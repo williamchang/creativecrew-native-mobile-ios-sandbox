@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-20
-    - Modified: 2008-08-21
+    - Modified: 2008-08-23
     .
 @note
     References:
@@ -23,19 +23,46 @@
 */
 
 #import <UIKit/UIKit.h>
+#import <sys/time.h>
 #import "EAGLView.h"
 
 // Forward declaration using "struct" instead C++ "class" for Objective-C compatibility.
 typedef struct CppDebugDraw CppDebugDraw;
+typedef struct CppDebugWrapper CppDebugWrapper;
 typedef struct b2World b2World;
+typedef struct b2MouseJoint b2MouseJoint;
 
 @interface DebugDraw : NSObject {
 @private
-    CppDebugDraw *_cpp;
+    CppDebugWrapper *_cppDebugWrapper;
+    CppDebugDraw *_cppDebugDraw;
     b2World *_physicsWorld;
+    
+    GLfloat _x;
+    GLfloat _y;
+    
+    // last time the main loop was updated.
+	struct timeval _timeLast;
+	// delta time since last tick to main loop.
+	GLfloat _deltaTime;
+    // Debug render fps.
+	GLint _frameCount;
+	GLfloat _deltaTimeCount;
+	GLfloat _frameRate;
+    
+    b2MouseJoint *_jointPicker;
 }
 
 - (void) setPhyicsWorld:(b2World *)w;
-- (void) setFlags:(GLuint)f;
+- (void) setPhysicsDebugFlags:(GLuint)f;
+- (void) calculateDeltaTime;
+- (void) showFps;
+- (void) setCoordinates:(GLfloat)x with:(GLfloat)y;
+- (void) showCoordinates;
+- (void) pickBodyBegan:(GLfloat)x with:(GLfloat)y;
+- (void) pickBodyMoved:(GLfloat)x with:(GLfloat)y;
+- (void) pickBodyEnded;
+- (BOOL) frameStarted;
+- (BOOL) frameEnded;
 
 @end
