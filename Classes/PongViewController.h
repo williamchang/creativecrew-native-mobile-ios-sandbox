@@ -50,6 +50,7 @@
 // Forward declaration using "struct" instead C++ "class" for Objective-C compatibility.
 typedef struct b2World b2World;
 typedef struct b2Body b2Body;
+typedef struct b2MouseJoint b2MouseJoint;
 typedef struct b2PrismaticJoint b2PrismaticJoint;
 
 // Texture list.
@@ -122,11 +123,13 @@ typedef struct	{
     GLfloat _cameraOffsetY;
     GLfloat _cameraOffsetZ;
     
-    b2Body *bodyBall;
-    b2Body *bodyPlayer1Paddle;
-    b2PrismaticJoint *jointPlayer1Paddle;
+    b2Body *_bodyBall;
+    b2Body *_bodyPlayer1Paddle;
+    b2PrismaticJoint *_jointPlayer1Paddle;
+    b2MouseJoint *_jointPlayer1Touchpad;
+    bool isFirstPlayer1Touched;
     
-    bool isFirstForces;
+    bool isFirstPhysicsForced;
 }
 
 @property (nonatomic, retain) PongView *glView;
@@ -134,6 +137,9 @@ typedef struct	{
 
 - (CGRect) getViewVirtualBounds;
 - (void) transitionTo:(UIView *)view slideDirection:(int)style;
+- (void) player1Began:(GLfloat)x with:(GLfloat)y;
+- (void) player1Moved:(GLfloat)x with:(GLfloat)y;
+- (void) player1Ended;
 - (void) updateBall;
 - (void) updatePlayer1;
 - (void) updatePlayer2;

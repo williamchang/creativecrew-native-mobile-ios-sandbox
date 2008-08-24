@@ -68,12 +68,12 @@
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
     if([touch view] == ivPlayer1Touchpad) {
-        _Player1Paddle.x = [touch locationInView:self.view].x;
-        _Player1Paddle.y = [touch locationInView:self.view].y;
-        //NSLog(@"Breakpoint 1");
+        GLfloat x = [touch locationInView:self.view].x / 16;
+        GLfloat y = 3.0;
+        [self player1Began:x with:y];
     } else if([touch view] == glView) {
         GLfloat x = [touch locationInView:self.view].x / 16;
-        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30);
+        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30.0);
         [_physicsDebugDraw pickBodyBegan:x with:y];
     }
 }
@@ -81,18 +81,21 @@
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
     if([touch view] == ivPlayer1Touchpad) {
-        _Player1Paddle.x = [touch locationInView:self.view].x;
-        _Player1Paddle.y = [touch locationInView:self.view].y;
+        GLfloat x = [touch locationInView:self.view].x / 16;
+        GLfloat y = 3.0;
+        [self player1Moved:x with:y];
     } else if([touch view] == glView) {
         GLfloat x = [touch locationInView:self.view].x / 16;
-        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30);
+        GLfloat y = -(([touch locationInView:self.view].y / 16) - 30.0);
         [_physicsDebugDraw pickBodyMoved:x with:y];
     }
 }
 //---------------------------------------------------------------------
 - (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
-    if([touch view] == glView) {
+    if([touch view] == ivPlayer1Touchpad) {
+        [self player1Ended];
+    } else if([touch view] == glView) {
         [self start];
         [_physicsDebugDraw pickBodyEnded];
     }
@@ -119,43 +122,49 @@
     return b;
 }
 //---------------------------------------------------------------------
+- (void) player1Began:(GLfloat)x with:(GLfloat)y {
+    if(_jointPlayer1Touchpad != NULL) {
+        return;
+    }
+    
+    if(isFirstPlayer1Touched) {
+        x = _bodyPlayer1Paddle->GetWorldCenter().x;
+        y = _bodyPlayer1Paddle->GetWorldCenter().y;
+        isFirstPlayer1Touched = false;
+    }
+    
+    // Get coordinates from input event.
+    b2Vec2 p;
+    p.Set(x, y);
+    
+    if(_bodyPlayer1Paddle) {
+        b2MouseJointDef md;
+        md.body1 = _physicsWorld->GetGroundBody();
+        md.body2 = _bodyPlayer1Paddle;
+        md.target = p;
+        md.maxForce = 1000.0 * _bodyPlayer1Paddle->GetMass();
+        _jointPlayer1Touchpad = (b2MouseJoint *)_physicsWorld->CreateJoint(&md);
+		_bodyPlayer1Paddle->WakeUp();
+    }
+}
+//---------------------------------------------------------------------
+- (void) player1Moved:(GLfloat)x with:(GLfloat)y {
+    if(_jointPlayer1Touchpad) {
+        b2Vec2 p;
+        p.Set(x, y);
+        _jointPlayer1Touchpad->SetTarget(p);
+    }
+}
+//---------------------------------------------------------------------
+- (void) player1Ended {
+    if(_jointPlayer1Touchpad) {
+        _physicsWorld->DestroyJoint(_jointPlayer1Touchpad);
+        _jointPlayer1Touchpad = NULL;
+    }
+    isFirstPlayer1Touched = true;
+}
+//---------------------------------------------------------------------
 - (void) updateBall {
-    GLfloat wallTop = glView.bounds.size.height - 12;
-    GLfloat wallRight = glView.bounds.size.width - 12;
-    GLfloat wallBottom = 64 + 12;
-    GLfloat wallLeft = 0 + 12;
-    
-    if(_ballDirection == 0) {
-         _ballPosition.x -= _ballPositionVelocity.x;
-         _ballPosition.y -= _ballPositionVelocity.y;
-    } else if(_ballDirection == 1) {
-        _ballPosition.x += _ballPositionVelocity.x;
-        _ballPosition.y -= _ballPositionVelocity.y;
-    } else if(_ballDirection == 2) {
-        _ballPosition.x += _ballPositionVelocity.x;
-        _ballPosition.y += _ballPositionVelocity.y;
-    } else if(_ballDirection == 3) {
-        _ballPosition.x -= _ballPositionVelocity.x;
-        _ballPosition.y += _ballPositionVelocity.y;
-    }
-    
-    if(_ballDirection == 0 && _ballPosition.x < wallLeft) {
-        _ballDirection = 1;
-    } else if(_ballDirection == 0 && _ballPosition.y < wallBottom) {
-        _ballDirection = 3;
-    } else if(_ballDirection == 1 && _ballPosition.y < wallBottom) {
-        _ballDirection = 2;
-    } else if(_ballDirection == 1 && _ballPosition.x > wallRight) {
-        _ballDirection = 0;
-    } else if(_ballDirection == 2 && _ballPosition.y > wallTop) {
-        _ballDirection = 1;
-    } else if(_ballDirection == 2 && _ballPosition.x > wallRight) {
-        _ballDirection = 3;
-    } else if(_ballDirection == 3 && _ballPosition.y > wallTop) {
-        _ballDirection = 0;
-    } else if(_ballDirection == 3 && _ballPosition.x < wallLeft) {
-        _ballDirection = 2;
-    }
 }
 //---------------------------------------------------------------------
 - (void) updatePlayer1 {
@@ -287,42 +296,43 @@
     bodyBallDefine.position.Set(10.0, canvasHeight / 2);
     
     // Create rigid body from definition.
-    bodyBall = _physicsWorld->CreateBody(&bodyBallDefine);
+    _bodyBall = _physicsWorld->CreateBody(&bodyBallDefine);
     // Add the shape to the body.
-    bodyBall->CreateShape(&bodyBallShapeDefine);
+    _bodyBall->CreateShape(&bodyBallShapeDefine);
     // Dynamically compute the body's mass base on its shape.
-    bodyBall->SetMassFromShapes();
+    _bodyBall->SetMassFromShapes();
 
      
     
     // Define the body shape.
     b2PolygonDef bodyPaddleShapeDefine;
     bodyPaddleShapeDefine.SetAsBox(1.5, 0.3);
-    bodyPaddleShapeDefine.density = 1.0;
+    // Set the box density to be non-zero, so it will be dynamic.
+    bodyPaddleShapeDefine.density = 0.4;
     
     // Define the rigid body.
     b2BodyDef bodyPaddleDefine;
-    bodyPaddleDefine.position.Set(canvasWidth / 2, 7.0);
+    bodyPaddleDefine.position.Set(canvasWidth / 2, 5.0);
     bodyPaddleDefine.fixedRotation = true;
     
     // Create rigid body from definition.
-    bodyPlayer1Paddle = _physicsWorld->CreateBody(&bodyPaddleDefine);
+    _bodyPlayer1Paddle = _physicsWorld->CreateBody(&bodyPaddleDefine);
     // Add the shape to the body.
-    bodyPlayer1Paddle->CreateShape(&bodyPaddleShapeDefine);
-    bodyPlayer1Paddle->SetMassFromShapes();
+    _bodyPlayer1Paddle->CreateShape(&bodyPaddleShapeDefine);
+    _bodyPlayer1Paddle->SetMassFromShapes();
 
     // Define the joint.
     b2PrismaticJointDef jointPaddleDefine;
-    jointPaddleDefine.Initialize(bodyGround, bodyPlayer1Paddle, bodyGround->GetWorldCenter(), b2Vec2(1.0, 0.0));
+    jointPaddleDefine.Initialize(bodyGround, _bodyPlayer1Paddle, bodyGround->GetWorldCenter(), b2Vec2(1.0, 0.0));
     jointPaddleDefine.lowerTranslation = -8.0;
     jointPaddleDefine.upperTranslation = 8.0;
     jointPaddleDefine.enableLimit = true;
     jointPaddleDefine.maxMotorForce = 1000.0;
-    jointPaddleDefine.motorSpeed = 2.0;
+    jointPaddleDefine.motorSpeed = 4.0;
     jointPaddleDefine.enableMotor = false;
     
     // Create joint from definition.
-    jointPlayer1Paddle = (b2PrismaticJoint *)_physicsWorld->CreateJoint(&jointPaddleDefine);
+    _jointPlayer1Paddle = (b2PrismaticJoint *)_physicsWorld->CreateJoint(&jointPaddleDefine);
     
     // Prepare for simulation. Typically we use a time step of 1/60 of a
     // second (60Hz) and 10 iterations. This provides a high quality simulation
@@ -330,7 +340,7 @@
     _physicsWorldTimeStep = 1.0 / kRenderingFPS;
     _physicsWorldIterationCount = 10;
     
-    isFirstForces = true;
+    isFirstPhysicsForced = true;
 }
 //---------------------------------------------------------------------
 // C++ binding layer.
@@ -372,14 +382,14 @@
     [_physicsDebugDraw frameEnded];
     
     // Get the position and angle of the body.
-    _ballPosition.x = bodyBall->GetPosition().x;
-    _ballPosition.y = bodyBall->GetPosition().y;
-    _ballRotation = bodyBall->GetAngle();
+    _ballPosition.x = _bodyBall->GetPosition().x;
+    _ballPosition.y = _bodyBall->GetPosition().y;
+    _ballRotation = _bodyBall->GetAngle();
     
-    if(isFirstForces) {
+    if(isFirstPhysicsForced) {
         // First vector is where the body should end up and the second vector is the body's center or it will spin.
-        bodyBall->ApplyImpulse(b2Vec2(40.0, 40.0), bodyBall->GetWorldCenter());
-        isFirstForces = false;
+        _bodyBall->ApplyImpulse(b2Vec2(40.0, 40.0), _bodyBall->GetWorldCenter());
+        isFirstPhysicsForced = false;
     }
 }
 //---------------------------------------------------------------------
@@ -393,7 +403,8 @@
         // Reset.
         [self reset];
         // Init.
-        //ivPlayer1Touchpad.hidden = NO;
+        ivPlayer1Touchpad.hidden = NO;
+        isFirstPlayer1Touched = true;
         _isFirstTap = NO;
     } else { // Either the user tapped to start a new game or the user successfully landed the rocket.
         // Stop rendering timer
@@ -455,8 +466,6 @@
         timeDifference = timeCurrent - _timeBegin;
         // Update physics.
         [self updatePhysics];
-        // Update ball logic.
-		//[self updateBall];
         //_ballRotation += _ballRotationVelocity * timeDifference;
         // Update player 1 logic.
 		[self updatePlayer1];
@@ -512,10 +521,14 @@
     [_Player1StatusScore release];
     [_Player2StatusScore release];
     unsigned int i;for(i = 0;i < kNumTextures;i++) {[_textures[i] release];}
+    
+    delete _jointPlayer1Touchpad; // C++
+    delete _jointPlayer1Paddle; // C++
     [_physicsDebugDraw release];
     delete _physicsWorld; // C++
-    [ivPlayer1Touchpad release];
+    
     [_timer release];
+    [ivPlayer1Touchpad release];
     [glView release];
     [super dealloc];
 }
