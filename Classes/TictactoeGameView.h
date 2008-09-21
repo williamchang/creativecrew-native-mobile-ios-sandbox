@@ -1,6 +1,6 @@
 /**
 @file
-    TictactoeView.h
+    TictactoeGameView.h
 @brief
     Copyright 2008 Creative Crew. All rights reserved.
 @author
@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-14
-    - Modified: 2008-08-14
+    - Modified: 2008-09-20
     .
 @note
     References:
@@ -23,7 +23,7 @@
 #import <UIKit/UIKit.h>
 
 
-@interface TictactoeView : UIView {
+@interface TictactoeGameView : UIView {
 
 }
 

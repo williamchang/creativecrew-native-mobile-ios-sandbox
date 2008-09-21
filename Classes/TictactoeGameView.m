@@ -1,4 +1,4 @@
-#import "TictactoeView.h"
+#import "TictactoeGameView.h"
 
 @implementation TictactoeView
 //---------------------------------------------------------------------
