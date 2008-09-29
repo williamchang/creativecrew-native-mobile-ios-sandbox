@@ -13,10 +13,10 @@
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		730584F80E5717D90051D533 /* TictactoeViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 730584F60E5717D90051D533 /* TictactoeViewController.mm */; };
 		730584F90E5717D90051D533 /* PongViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 730584F70E5717D90051D533 /* PongViewController.mm */; };
-		730B24BF0E54CDC400FD059A /* TictactoeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 730B24BE0E54CDC400FD059A /* TictactoeView.m */; };
 		730B25B10E54D88800FD059A /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 730B25B00E54D88800FD059A /* QuartzCore.framework */; };
 		730B261F0E54DE6900FD059A /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 730B261E0E54DE6900FD059A /* icon.png */; };
 		730B26280E54DE9600FD059A /* background.png in Resources */ = {isa = PBXBuildFile; fileRef = 730B26270E54DE9600FD059A /* background.png */; };
+		732491930E85DAEA004879FB /* TictactoeGameView.m in Sources */ = {isa = PBXBuildFile; fileRef = 732491920E85DAEA004879FB /* TictactoeGameView.m */; };
 		735DE91C0E4BC3F8009B2A88 /* ConsoleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 735DE9190E4BC3F8009B2A88 /* ConsoleViewController.m */; };
 		735DE91D0E4BC3F8009B2A88 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 735DE91B0E4BC3F8009B2A88 /* MainViewController.m */; };
 		735DE9210E4BC415009B2A88 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 735DE91E0E4BC415009B2A88 /* MainWindow.xib */; };
@@ -82,12 +82,12 @@
 		730584F60E5717D90051D533 /* TictactoeViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TictactoeViewController.mm; path = Classes/TictactoeViewController.mm; sourceTree = "<group>"; };
 		730584F70E5717D90051D533 /* PongViewController.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = PongViewController.mm; path = Classes/PongViewController.mm; sourceTree = "<group>"; };
 		730B23930E54C75C00FD059A /* TictactoeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TictactoeViewController.h; path = Classes/TictactoeViewController.h; sourceTree = "<group>"; };
-		730B24BD0E54CDC400FD059A /* TictactoeView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TictactoeView.h; path = Classes/TictactoeView.h; sourceTree = "<group>"; };
-		730B24BE0E54CDC400FD059A /* TictactoeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TictactoeView.m; path = Classes/TictactoeView.m; sourceTree = "<group>"; };
 		730B25B00E54D88800FD059A /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		730B261E0E54DE6900FD059A /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		730B26270E54DE9600FD059A /* background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = background.png; path = Resources/background.png; sourceTree = "<group>"; };
 		7322058E0E52BE1B006E5599 /* PongViewController.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PongViewController.h; path = Classes/PongViewController.h; sourceTree = "<group>"; };
+		732491910E85DAEA004879FB /* TictactoeGameView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TictactoeGameView.h; path = Classes/TictactoeGameView.h; sourceTree = "<group>"; };
+		732491920E85DAEA004879FB /* TictactoeGameView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TictactoeGameView.m; path = Classes/TictactoeGameView.m; sourceTree = "<group>"; };
 		735DE9180E4BC3F8009B2A88 /* ConsoleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConsoleViewController.h; path = Classes/ConsoleViewController.h; sourceTree = "<group>"; };
 		735DE9190E4BC3F8009B2A88 /* ConsoleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConsoleViewController.m; path = Classes/ConsoleViewController.m; sourceTree = "<group>"; };
 		735DE91A0E4BC3F8009B2A88 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MainViewController.h; path = Classes/MainViewController.h; sourceTree = "<group>"; };
@@ -318,8 +318,8 @@
 			children = (
 				737867260E54334F00B26209 /* PongView.h */,
 				737867270E54334F00B26209 /* PongView.m */,
-				730B24BD0E54CDC400FD059A /* TictactoeView.h */,
-				730B24BE0E54CDC400FD059A /* TictactoeView.m */,
+				732491910E85DAEA004879FB /* TictactoeGameView.h */,
+				732491920E85DAEA004879FB /* TictactoeGameView.m */,
 			);
 			name = "View Classes";
 			sourceTree = "<group>";
@@ -545,7 +545,6 @@
 				735DE91C0E4BC3F8009B2A88 /* ConsoleViewController.m in Sources */,
 				735DE91D0E4BC3F8009B2A88 /* MainViewController.m in Sources */,
 				737867280E54334F00B26209 /* PongView.m in Sources */,
-				730B24BF0E54CDC400FD059A /* TictactoeView.m in Sources */,
 				73C378250E57159600789EA9 /* Texture2D.m in Sources */,
 				73C378260E57159600789EA9 /* EAGLView.m in Sources */,
 				73C378700E5715AD00789EA9 /* b2BroadPhase.cpp in Sources */,
@@ -584,6 +583,7 @@
 				739055E50E5C210500BFBC53 /* SoundEngine.cpp in Sources */,
 				73B37D820E5D1D9A00724D45 /* DebugDraw.mm in Sources */,
 				7376D7300E5E28D000B72D23 /* glu.cpp in Sources */,
+				732491930E85DAEA004879FB /* TictactoeGameView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -626,7 +626,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				SDKROOT = iphoneos2.0;
+				SDKROOT = iphoneos2.1;
 			};
 			name = Debug;
 		};
@@ -639,7 +639,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = iphoneos2.0;
+				SDKROOT = iphoneos2.1;
 			};
 			name = Release;
 		};

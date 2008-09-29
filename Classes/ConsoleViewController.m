@@ -113,8 +113,11 @@
         [self outputResponse:[@"" stringByAppendingFormat:@"Command \"%@\" executed.", command]];
         [txtInput resignFirstResponder];
         
-        //AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
-        //TictactoeViewController *vc = [[TictactoeViewController alloc] initWithNibName:@"TictactoeViewController" bundle:nil];
+        AppDelegate *dlgt = (AppDelegate *)[UIApplication sharedApplication].delegate;
+        TictactoeViewController *vc = [[TictactoeViewController alloc] init];
+        
+        [self.view removeFromSuperview];
+        [dlgt.window addSubview:vc.view];
         
         return YES;
     } else {

@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-04
-    - Modified: 2008-08-13
+    - Modified: 2008-08-20
     .
 @note
     References:
@@ -25,6 +25,7 @@
 @class ConsoleViewController;
 
 @interface AppDelegate : NSObject <UIApplicationDelegate> {
+@public
     IBOutlet UIWindow *window;
     IBOutlet MainViewController *vcMain;
     IBOutlet ConsoleViewController *vcConsole;

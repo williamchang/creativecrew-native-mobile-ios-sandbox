@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-20
-    - Modified: 2008-08-23
+    - Modified: 2008-09-28
     .
 @note
     References:
@@ -37,23 +37,25 @@ typedef struct b2MouseJoint b2MouseJoint;
     CppDebugWrapper *_cppDebugWrapper;
     CppDebugDraw *_cppDebugDraw;
     b2World *_physicsWorld;
+    CGRect _physicsWorldBounds;
     
     GLfloat _x;
     GLfloat _y;
     
-    // last time the main loop was updated.
+    // Last time the main loop was updated.
 	struct timeval _timeLast;
-	// delta time since last tick to main loop.
+	// Delta time since last tick to main loop.
 	GLfloat _deltaTime;
-    // Debug render fps.
+    // Debug render fps (frames per second).
 	GLint _frameCount;
 	GLfloat _deltaTimeCount;
 	GLfloat _frameRate;
     
+    // Pick.
     b2MouseJoint *_jointPicker;
 }
 
-- (void) setPhyicsWorld:(b2World *)w;
+- (void) setPhyicsWorld:(b2World *)w bounds:(CGRect)b;
 - (void) setPhysicsDebugFlags:(GLuint)f;
 - (void) calculateDeltaTime;
 - (void) showFps;

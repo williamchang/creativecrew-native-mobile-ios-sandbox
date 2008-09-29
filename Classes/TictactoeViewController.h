@@ -1,6 +1,6 @@
 /**
 @file
-    TictactoeViewController.h.h
+    TictactoeViewController.h
 @brief
     Copyright 2008 Creative Crew. All rights reserved.
 @author
@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-14
-    - Modified: 2008-08-14
+    - Modified: 2008-09-28
     .
 @note
     References:
@@ -22,9 +22,16 @@
 
 #import <UIKit/UIKit.h>
 
+@class TictactoeGameView;
 
 @interface TictactoeViewController : UIViewController {
-
+@public
+    UINavigationBar *navBar;
+    UINavigationItem *navItemTitle;
+@protected
+    TictactoeGameView *viewGame;
+@private
+    CGRect _rectContent;
 }
 
 @end

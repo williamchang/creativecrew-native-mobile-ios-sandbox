@@ -276,12 +276,14 @@ public:
     return self;
 }
 //---------------------------------------------------------------------
-- (void) setPhyicsWorld:(b2World *)w {
+- (void) setPhyicsWorld:(b2World *)w bounds:(CGRect)b {
     _physicsWorld = w;
     _physicsWorld->SetDebugDraw(_cppDebugDraw);
     CppContactListener *contactListener = new CppContactListener();
     contactListener->m = _cppDebugWrapper;
     _physicsWorld->SetContactListener(contactListener);
+    
+    _physicsWorldBounds = b;
 }
 //---------------------------------------------------------------------
 - (void) setPhysicsDebugFlags:(GLuint)f {
@@ -310,12 +312,30 @@ public:
         _deltaTimeCount = 0;
 	}
     
-	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", _frameRate] dimensions:CGSizeMake(40, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
+    CGSize textureSize = CGSizeMake(40, 14);
+    CGPoint texturePoint = CGPointMake(textureSize.width / 2, textureSize.height / 2);
+	Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%.2f", _frameRate] dimensions:textureSize alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
 	
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+        glOrthof(0, _physicsWorldBounds.size.width, 0, _physicsWorldBounds.size.height, -1.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(1.0, 0.0, 0.0, 1.0);
+            [texture drawAtPoint:CGPointMake(texturePoint.x + 8, texturePoint.y + 16)];
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glPopMatrix();
+        
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    
     //glEnable(GL_TEXTURE_2D);
 	//glEnableClientState(GL_VERTEX_ARRAY);
 	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
+    /*
     glPushMatrix();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glScalef(0.1, 0.1, 1.0);
@@ -323,7 +343,7 @@ public:
     [texture drawAtPoint:CGPointMake(30, 15)];
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glPopMatrix();
-    
+    */
 	//glDisable(GL_TEXTURE_2D);
 	//glDisableClientState(GL_VERTEX_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -337,15 +357,24 @@ public:
 }
 //---------------------------------------------------------------------
 - (void) showCoordinates {
-    Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"(X:%.2f Y:%.2f)", _x, _y] dimensions:CGSizeMake(136, 15) alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
+    CGSize textureSize = CGSizeMake(136, 14);
+    CGPoint texturePoint = CGPointMake(textureSize.width / 2, textureSize.height / 2);
+    Texture2D *texture = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"(X:%.2f Y:%.2f)", _x, _y] dimensions:textureSize alignment:UITextAlignmentLeft fontName:@"Arial" fontSize:15];
     
+    glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glScalef(0.1, 0.1, 1.0);
-    glColor4f(0.0, 0.0, 1.0, 1.0);
-    [texture drawAtPoint:CGPointMake(75, 35)];
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glOrthof(0, _physicsWorldBounds.size.width, 0, _physicsWorldBounds.size.height, -1.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(0.0, 0.0, 1.0, 1.0);
+            [texture drawAtPoint:CGPointMake(texturePoint.x + 8, texturePoint.y + 32)];
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
     glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
     
     [texture release];
 }

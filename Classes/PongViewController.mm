@@ -24,7 +24,7 @@
 }
 //---------------------------------------------------------------------
 - (id) initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-	if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
+	if(self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
 		// Title displayed by the navigation controller.
         self.title = @"Pong";
 	}
@@ -53,6 +53,7 @@
 /* If you need to do additional setup after loading the view, override viewDidLoad. */
 - (void) viewDidLoad {
     [super viewDidLoad];
+    self.view.multipleTouchEnabled = YES;
 }
 //---------------------------------------------------------------------
 - (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -67,6 +68,14 @@
 //---------------------------------------------------------------------
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
+    
+    // Pinch.
+    if([touches count] == 2) {
+        CGPoint touchPinchPoint1 = [[[touches allObjects] objectAtIndex:0] locationInView:self.view];
+        CGPoint touchPinchPoint2 = [[[touches allObjects] objectAtIndex:1] locationInView:self.view];
+        _touchesPinchDistanceBegan = [self distancePoints:touchPinchPoint1 toPoint:touchPinchPoint2];
+    }
+    // Zones.
     if([touch view] == ivPlayer1Touchpad) {
         GLfloat x = [touch locationInView:self.view].x / 16;
         GLfloat y = 3.0;
@@ -80,6 +89,27 @@
 //---------------------------------------------------------------------
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
+    
+    // Pinch.
+    if([touches count] == 2) {
+        CGPoint touchPinchPoint1 = [[[touches allObjects] objectAtIndex:0] locationInView:self.view];
+        CGPoint touchPinchPoint2 = [[[touches allObjects] objectAtIndex:1] locationInView:self.view];
+        CGFloat touchesPinchDistanceMoved = [self distancePoints:touchPinchPoint1 toPoint:touchPinchPoint2];
+        CGFloat touchesPinchRatio = touchesPinchDistanceMoved / _touchesPinchDistanceBegan;
+        if(touchesPinchDistanceMoved > _touchesPinchDistanceLast) {
+            // Zoom out.
+            _statePinch = kStatePinch_Outward;
+            glScalef(1.0 + -touchesPinchRatio / 60, 1.0 + -touchesPinchRatio / 60, 1.0);
+            NSLog(@"Outward: %f, %f", touchesPinchDistanceMoved, touchesPinchRatio);
+        } else {
+            // Zoom in.
+            _statePinch = kStatePinch_Inward;
+            glScalef(1.0 + touchesPinchRatio / 20, 1.0 + touchesPinchRatio / 20, 1.0);
+            NSLog(@"Inward: %f, %f", touchesPinchDistanceMoved, touchesPinchRatio);
+        }
+        _touchesPinchDistanceLast = touchesPinchDistanceMoved;
+    }
+    // Zones.
     if([touch view] == ivPlayer1Touchpad) {
         GLfloat x = [touch locationInView:self.view].x / 16;
         GLfloat y = 3.0;
@@ -93,12 +123,32 @@
 //---------------------------------------------------------------------
 - (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
+    
+    // Zones.
     if([touch view] == ivPlayer1Touchpad) {
         [self player1Ended];
     } else if([touch view] == glView) {
         [self start];
         [_physicsDebugDraw pickBodyEnded];
     }
+    
+    // Reset or clear touches.
+    _statePinch = kStatePinch_Null;
+    _touchesPinchDistanceLast = -1.0;
+}
+//---------------------------------------------------------------------
+- (void) touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    NSLog(@"Touches cancelled.");
+    
+    // Reset or clear touches.
+    _statePinch = kStatePinch_Null;
+    _touchesPinchDistanceBegan = -1.0;
+}
+//---------------------------------------------------------------------
+- (CGFloat) distancePoints:(CGPoint)from toPoint:(CGPoint)to {
+    float x = to.x - from.x;
+    float y = to.y - from.y;
+    return sqrt(x * x + y * y);
 }
 //---------------------------------------------------------------------
 - (void) transitionTo:(UIView *)view slideDirection:(int)style {/*
@@ -208,30 +258,54 @@
     // TODO: Implement sound.
 
     // Render the title frame.
-    glDisable(GL_BLEND);
-    [_textures[kTexture_Title] drawInRect:[self getViewVirtualBounds]];
-    glEnable(GL_BLEND);
+    CGRect boundsScreen = [[UIScreen mainScreen] bounds];
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+        glLoadIdentity();
+        glOrthof(0, boundsScreen.size.width, 0, boundsScreen.size.height, -1.0, 1.0);
+    
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+            glLoadIdentity();
+            glDisable(GL_BLEND);
+            [_textures[kTexture_Title] drawInRect:boundsScreen];
+            glEnable(GL_BLEND);
+        glPopMatrix();
 
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    
+    // Default matrix mode.
+    glMatrixMode(GL_MODELVIEW);
+    
     // Swap the framebuffer.
     [glView swapBuffers];
 }
 //---------------------------------------------------------------------
 - (void) setProjection2D {
-    CGRect bounds = [self getViewVirtualBounds];
+    CGRect bounds = [[UIScreen mainScreen] bounds];
     
-    // Initialize OpenGL projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrthof(0, bounds.size.width, 0, bounds.size.height, -10, 10); // Left, right, bottom, near, far.
-    glMatrixMode(GL_MODELVIEW); // Make OpenGL matrix mode default to modelview.
-    glLoadIdentity();
+    glOrthof(0, bounds.size.width, 0, bounds.size.height, -1.0, 1.0); // Left, right, bottom, near, far.
 }
 //---------------------------------------------------------------------
 - (void) setProjection3D {
+    CGRect boundsScreen = [[UIScreen mainScreen] bounds];
     CGRect bounds = [self getViewVirtualBounds];
     GLfloat eyeZ = bounds.size.height / 1.1566;
     eyeZ += 0.0; // Positive: zoom out, negative: zoom in.
     
+    //float factor = 1.0;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrthof(0, boundsScreen.size.width, 0, boundsScreen.size.height, -100, 100);
+    //glOrthof(-320 / factor, 320 / factor, -480 / factor, 480 / factor, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glScalef(16.0, 16.0, 1.0);
+    
+    /*
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60.0, (GLfloat)bounds.size.width / (GLfloat)bounds.size.height, 0.5, 1500.0); // Field of view, aspect, near, far.
@@ -243,6 +317,7 @@
         bounds.size.width / 2, bounds.size.height / 2, -100.0, // Look at x, y, z.
         0.0, 1.0, 0.0 // Up x, y, z.
     );
+    */
 }
 //---------------------------------------------------------------------
 // C++ binding layer.
@@ -268,7 +343,7 @@
     
     // Debugging.
     _physicsDebugDraw = [[DebugDraw alloc] init];
-    [_physicsDebugDraw setPhyicsWorld:_physicsWorld];
+    [_physicsDebugDraw setPhyicsWorld:_physicsWorld bounds:[self getViewVirtualBounds]];
 
     
     
@@ -403,7 +478,7 @@
         // Reset.
         [self reset];
         // Init.
-        ivPlayer1Touchpad.hidden = NO;
+        ivPlayer1Touchpad.hidden = YES;
         isFirstPlayer1Touched = true;
         _isFirstTap = NO;
     } else { // Either the user tapped to start a new game or the user successfully landed the rocket.
@@ -424,6 +499,7 @@
 - (void) reset {
     CGRect bounds = [self getViewVirtualBounds];
     _state = kState_Running;
+    _statePinch = kStatePinch_Null;
     _timeBegin = CFAbsoluteTimeGetCurrent();
     
     // Destroy dynamic textures.
@@ -476,18 +552,18 @@
         [_timer invalidate];
         _timer = nil;
     }
-    /*
+
     // Draw background.
-    glDisable(GL_BLEND);
+    /*glDisable(GL_BLEND);
     [_textures[kTexture_Background] drawInRect:bounds];
-    glEnable(GL_BLEND);
+    glEnable(GL_BLEND);*/
     
     if(_state != kState_StandBy) {
         // Draw player 1 paddle.
-        glPushMatrix();
+        /*glPushMatrix();
             glTranslatef(_Player1Paddle.x, 76, 0);
             [_textures[kTexture_Player1Paddle] drawAtPoint:CGPointZero];
-        glPopMatrix();
+        glPopMatrix();*/
         
         // Draw overlay player 1 status.
         _Player1StatusScore = [[Texture2D alloc] initWithString:[NSString stringWithFormat:@"%i", _Player1Score] dimensions:CGSizeMake(32, 32) alignment:UITextAlignmentCenter fontName:kFontName fontSize:kLabelFontSize];
@@ -506,13 +582,13 @@
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         
         // Draw ball.
-        glPushMatrix();
+        /*glPushMatrix();
             glTranslatef(_ballPosition.x, _ballPosition.y, 0);
             glRotatef(_ballRotation, 0.0, 0.0, 1.0);
             [_textures[kTexture_Ball] drawAtPoint:CGPointZero];
-        glPopMatrix();
+        glPopMatrix();*/
     }
-    */
+
     // Swap frame buffers.
     [glView swapBuffers];
 }

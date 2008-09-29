@@ -9,7 +9,7 @@
     0.1
 @date
     - Created: 2008-08-13
-    - Modified: 2008-08-23
+    - Modified: 2008-09-28
     .
 @note
     References:
@@ -76,7 +76,7 @@ enum {
     kNumSounds
 };
 
-// State list.
+// State list type.
 typedef enum {
     kState_StandBy = 0,
     kState_Running,
@@ -84,6 +84,14 @@ typedef enum {
     kState_Failure
 } State;
 
+// Pinch state list type.
+typedef enum {
+    kStatePinch_Null = 0,
+    kStatePinch_Inward,
+    kStatePinch_Outward
+} StatePinch;
+
+// 2D vector complex type.
 typedef struct	{
     GLfloat x, y;
 } Vector2D;
@@ -119,6 +127,11 @@ typedef struct	{
     // Debug lines.
     DebugDraw *_physicsDebugDraw;
     
+    // Pinch.
+    StatePinch _statePinch;
+    CGFloat _touchesPinchDistanceBegan;
+    CGFloat _touchesPinchDistanceLast;
+    
     GLfloat _cameraOffsetX;
     GLfloat _cameraOffsetY;
     GLfloat _cameraOffsetZ;
@@ -135,6 +148,7 @@ typedef struct	{
 @property (nonatomic, retain) PongView *glView;
 @property (nonatomic, retain) UIImageView *ivPlayer1Touchpad;
 
+- (CGFloat) distancePoints:(CGPoint)from toPoint:(CGPoint)to;
 - (CGRect) getViewVirtualBounds;
 - (void) transitionTo:(UIView *)view slideDirection:(int)style;
 - (void) player1Began:(GLfloat)x with:(GLfloat)y;
