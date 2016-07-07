@@ -1,6 +1,7 @@
 # Set certain folders/files or patterns to be ignored.
+build/
+Vendors/Box2D/
+Vendors/JSON/
+Vendors/SIO2/
 .svn/
 .DS_Store
-
-build/
-
